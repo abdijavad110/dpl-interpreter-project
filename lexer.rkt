@@ -1,9 +1,9 @@
 #lang racket
 
-
 (require parser-tools/lex
          (prefix-in : parser-tools/lex-sre)
          parser-tools/yacc)
+(provide (all-defined-out))
 
 (define our-lexer
   (lexer
@@ -51,5 +51,6 @@
 (define-empty-tokens b (EOF SEMICOL COMMA = < > == != + - * / LPAR RPAR LBRACKET RBRACKET WHILE DO END IF THEN ELSE ENDIF RETURN NULL TRUE FALSE))
 
 ;test
-(define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this our-lexer (open-input-string "while <>= == != ( ) [ ] a do b + 3; end")))
+;(define lex-this (lambda (lexer input) (lambda () (lexer input))))
+;(define my-lexer (lex-this our-lexer (open-input-string "while <>= == != ( ) [ ] a do b + 3; end")))
+;(let ((parser-res (our-parser my-lexer))) parser-res)

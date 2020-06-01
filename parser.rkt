@@ -1,8 +1,144 @@
 #lang racket
-require parser-tools/lex
+(require parser-tools/lex
          (prefix-in re- parser-tools/lex-sre)
          parser-tools/yacc)
 (provide (all-defined-out))
+(require "lexer.rkt")
+
+(struct command ())
+(struct unitcom-expr command (ucom))
+(struct multi-command-expr command (mcom ucom))
+
+;(define-datatype command command?
+;  (unitcom-expr (ucom unitcom?))
+;  (multi-command-expr (mcom command?) (ucom unitcom?))
+;  )
+
+(struct unitcom ())
+(struct whilecom-expr unitcom (whileexpr))
+(struct ifcom-expr unitcom (ifexpr))
+(struct assigncom-expr unitcom (assignexpr))
+(struct returncom-expr unitcom (returnexpr))
+
+;(define-datatype unitcom unitcom?
+;  (whilecom-expr (while while-expr?))
+;  (ifcom-expr (if if-expr?))
+;  (assigncom-expr (assign assign-expr?))
+;  (returncom-expr (return return-expr?))
+;  )
+
+(struct while-expr (exp com))
+
+;(define-datatype while while-expr?
+;  (while-expr (exp expression?) (com command?))
+;  )
+
+(struct if-expr (exp1 com1 com2))
+
+;(define-datatype if if-expr?
+;  (if-expr (exp1 expression?) (com1 command?) (com2 command?))
+;  )
+
+(struct assign-expr (var exp))
+
+;(define-datatype assign assign-expr?
+;  (assign-expr (var symbol?) (exp expression?)) ;TODO
+;  )
+
+(struct return-expr (exp))
+
+;(define-datatype return return-expr?
+;  (return-expr (exp expression?))
+;  )
+
+(struct expression (a1))
+(struct aexp-expr expression ())
+(struct greater?-expr expression (a2))
+(struct smaller?-expr expression (a2))
+(struct equal?-expr expression (a2))
+(struct not-equal?-expr expression (a2))
+
+;(define-datatype expression expression?
+;  (aexp-expr (a1 aexpression?))
+;  (greater?-expr (a1 aexpression?) (a2 aexpression?))
+;  (smaller?-expr (a1 aexpression?) (a2 aexpression?))
+;  (equal?-expr (a1 aexpression?) (a2 aexpression?))
+;  (not-equal?-expr (a1 aexpression?) (a2 aexpression?))
+;  )
+
+(struct aexpression (b1))
+(struct bexp-expr aexpression ())
+(struct minus-expr aexpression (a1))
+(struct plus-expr aexpression (a1))
+
+;(define-datatype aexp aexpression?
+;  (bexp-expr (b1 bexpression?))
+;  (minus-expr (b1 bexpression?) (a1 aexpression?))
+;  (plus-expr (b1 bexpression?) (a1 aexpression?))
+;  )
+
+(struct bexpression (c1))
+(struct cexp-expr bexpression ())
+(struct mult-expr bexpression (b1))
+(struct divide-expr bexpression (b1))
+
+;(define-datatype bexp bexpression?
+;  (cexp-expr (c1 cexpression?))
+;  (mult-expr (c1 cexpression?) (b1 bexpression?))
+;  (divide-expr (c1 cexpression?) (b1 bexpression?))
+;  )
+
+(struct cexpression ())
+(struct neg-expr cexpression (c1))
+(struct par-expr cexpression (c1))
+(struct posnum-expr cexpression (posnumber))
+(struct null-expr cexpression ())
+(struct bool-expr cexpression (val))
+(struct var-expr cexpression (var))
+(struct string-expr cexpression (string-val))
+(struct list-expr cexpression (l))
+(struct listmem-expr cexpression (var lm))
+
+;(define-datatype cexp cexpression?
+;  (neg-expr (c1 cexpression?))
+;  (par-expr (c1 cexpression?))
+;  (posnum-expr (pnum positive?)) ;TODO
+;  (null-expr)
+;  (bool-expr (b string?)) ;TODO
+;  (var-expr (v symbol?)) ;TODO
+;  (string-expr (s string?))
+;  (list-expr (l list?))
+;  (listmem-expr (v string?) (lm listmem?))
+;  )
+
+(struct list ())
+(struct listValues-expr list (lv))
+(struct empty-list-expr list ())
+ 
+;(define-datatype list list?
+;  (listValues-expr (lv listValues?))
+;  (empty-list-expr)
+;  )
+
+(struct listValues (exp1))
+(struct val-exp-expr listValues ())
+(struct extended-listValues-expr listValues (lv))
+
+;(define-datatype listValues listValues?
+;  (val-exp-expr (exp expression?))
+;  (extended-listValues-expr (exp expression?) (lv listValues?))
+;  )
+
+(struct listmem (exp1))
+(struct idx-expr listmem ())
+(struct multi-idx-expr listmem (lm))
+
+;(define-datatype listmem listmem?
+;  (idx-expr (exp expression?))
+;  (multi-idx-expr (exp expression?) (lm listmem?))
+;  )
+
+
 
 (define our-parser
   (parser
@@ -11,15 +147,16 @@ require parser-tools/lex
    (error void)
    (tokens a b)
    (precs (left - +))
+   (debug "input.txt")
    (grammar
     (command 
          ((unitcom) (unitcom-expr $1))
-         ((command SEMICOL unitcom) (command-expr $1 $3)))
+         ((command SEMICOL unitcom) (multi-command-expr $1 $3)))
     (unitcom
          ((whilecom) (whilecom-expr $1))
          ((ifcom) (ifcom-expr $1))
-         ((assign) (assign-expr $1))
-         ((return)(return-expr $1)))
+         ((assign) (assigncom-expr $1))
+         ((return)(returncom-expr $1)))
     (whilecom
          ((WHILE exp DO command END) (while-expr $2 $4)))
     (ifcom
@@ -46,21 +183,25 @@ require parser-tools/lex
          ((- cexp) (neg-expr $2))
          ((LPAR exp RPAR) (par-expr $2))
          ((POS) (posnum-expr $1))
-         (() (null-expr))
+         ((NULL) (null-expr))
          ((VARIABLE) (var-expr $1))
-         ((TRUE) (bool-expr $1))
-         ((FALSE) (bool-expr $1))
+         ((TRUE) (bool-expr #t))
+         ((FALSE) (bool-expr #f))
          ((STRING) (string-expr $1))
          ((list) (list-expr $1))
          ((VARIABLE listmem) (listmem-expr $1 $2)))
     (list
          ((LBRACKET listValues RBRACKET) (listValues-expr $2))
-         ((LBRACKET RBRACKET) (empty-list-expr))
+         ((LBRACKET RBRACKET) (empty-list-expr)))
     (listValues
-         ((exp) (exp-val $1))
-         ((exp , listValues) (extended-listValues-expr $1 $3)))
+         ((exp) (val-exp-expr $1))
+         ((exp COMMA listValues) (extended-listValues-expr $1 $3)))
     (listmem
          ((LBRACKET exp RBRACKET) (idx-expr $2))
          ((LBRACKET exp RBRACKET listmem) (multi-idx-expr $2 $4)))
     )))
-   
+
+;test
+(define lex-this (lambda (lexer input) (lambda () (lexer input))))
+(define my-lexer (lex-this our-lexer (open-input-string "a = 7; return 3*5")))
+(let ((parser-res (our-parser my-lexer))) parser-res)
