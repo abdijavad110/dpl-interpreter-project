@@ -22,7 +22,7 @@
    ("false" (token-FALSE))
    (
     (:: (:or (char-range #\a #\z) (char-range #\A #\Z))
-             (:* (:or (char-range #\a #\z) (char-range #\A #\Z) (char-range #\0 #\9) #\_ #\-)))
+             (:* (:or (char-range #\a #\z) (char-range #\A #\Z) (char-range #\0 #\9) #\_)))
     (token-VARIABLE (string->symbol lexeme)))
    (
     (:+ (char-range #\0 #\9))
