@@ -111,9 +111,9 @@
 ;  (listmem-expr (v string?) (lm listmem?))
 ;  )
 
-(struct list ())
-(struct listValues-expr list (lv))
-(struct empty-list-expr list ())
+(struct our-list ())
+(struct listValues-expr our-list (lv))
+(struct empty-list-expr our-list ())
  
 ;(define-datatype list list?
 ;  (listValues-expr (lv listValues?))
@@ -151,7 +151,7 @@
    (grammar
     (command 
          ((unitcom) (unitcom-expr $1))
-         ((command SEMICOL unitcom) (multi-command-expr $1 $3)))
+         ((command SEMICOL unitcom) (multi-command-expr $1 (unitcom-expr $3))))
     (unitcom
          ((whilecom) (whilecom-expr $1))
          ((ifcom) (ifcom-expr $1))
@@ -188,9 +188,9 @@
          ((TRUE) (bool-expr #t))
          ((FALSE) (bool-expr #f))
          ((STRING) (string-expr $1))
-         ((list) (list-expr $1))
+         ((our-list) (list-expr $1))
          ((VARIABLE listmem) (listmem-expr $1 $2)))
-    (list
+    (our-list
          ((LBRACKET listValues RBRACKET) (listValues-expr $2))
          ((LBRACKET RBRACKET) (empty-list-expr)))
     (listValues
@@ -201,7 +201,64 @@
          ((LBRACKET exp RBRACKET listmem) (multi-idx-expr $2 $4)))
     )))
 
+
+(define parse-object-to-list
+  (lambda (root-object)
+    (cond
+      [(unitcom-expr? root-object) (list "unitcom-expr" (parse-object-to-list (unitcom-expr-ucom root-object)))]
+      [(multi-command-expr? root-object) (list "multi-command-expr" (parse-object-to-list (multi-command-expr-mcom root-object)) (parse-object-to-list (multi-command-expr-ucom root-object)))]
+
+      [(whilecom-expr? root-object) (list "whilecom-expr" (parse-object-to-list (whilecom-expr-whileexpr root-object)))]
+      [(ifcom-expr? root-object) (list "ifcom-expr" (parse-object-to-list (ifcom-expr-ifexpr root-object)))]
+      [(assigncom-expr? root-object) (list "assigncom-expr" (parse-object-to-list (assigncom-expr-assignexpr root-object)))]
+      [(returncom-expr? root-object) (list "returncom-expr" (parse-object-to-list (returncom-expr-returnexpr root-object)))]
+
+      [(while-expr? root-object) (list "while-expr" (parse-object-to-list (while-expr-exp root-object)) (parse-object-to-list (while-expr-com root-object)))]
+      [(if-expr? root-object) (list "if-expr" (parse-object-to-list (if-expr-exp1 root-object)) (parse-object-to-list (if-expr-com1 root-object)) (parse-object-to-list (if-expr-com2 root-object)))]
+      [(assign-expr? root-object) (list "assign-expr" (parse-object-to-list (assign-expr-var root-object)) (parse-object-to-list (assign-expr-exp root-object)))]
+      [(return-expr? root-object) (list "return-expr" (parse-object-to-list (return-expr-exp root-object)))]
+      
+      [(aexp-expr? root-object) (list "aexp-expr" (parse-object-to-list (expression-a1 root-object)))]
+      [(greater?-expr? root-object) (list "greater?-expr" (parse-object-to-list (expression-a1 root-object)) (parse-object-to-list (greater?-expr-a2 root-object)))]
+      [(smaller?-expr? root-object) (list "smaller?-expr" (parse-object-to-list (expression-a1 root-object)) (parse-object-to-list (smaller?-expr-a2 root-object)))]
+      [(equal?-expr? root-object) (list "equal?-expr" (parse-object-to-list (expression-a1 root-object)) (parse-object-to-list (equal?-expr-a2 root-object)))]
+      [(not-equal?-expr? root-object) (list "not-equal?-expr" (parse-object-to-list (expression-a1 root-object)) (parse-object-to-list (not-equal?-expr-a2 root-object)))]
+
+      [(bexp-expr? root-object) (list "bexp-expr" (parse-object-to-list (aexpression-b1 root-object)))]
+      [(minus-expr? root-object) (list "minus-expr" (parse-object-to-list (minus-expr-a1 root-object)))]
+      [(plus-expr? root-object) (list "plus-expr" (parse-object-to-list (plus-expr-a1 root-object)))]
+
+      [(cexp-expr? root-object) (list "cexp-expr" (parse-object-to-list (bexpression-c1 root-object)))]
+      [(mult-expr? root-object) (list "mult-expr" (parse-object-to-list (bexpression-c1 root-object)) (parse-object-to-list (mult-expr-b1 root-object)))]
+      [(divide-expr? root-object) (list "divide-expr" (parse-object-to-list (bexpression-c1 root-object)) (parse-object-to-list (divide-expr-b1 root-object)))]
+
+      [(neg-expr? root-object) (list "neg-expr" (parse-object-to-list (neg-expr-c1 root-object)))]
+      [(par-expr? root-object) (list "par-expr" (parse-object-to-list (par-expr-c1 root-object)))]
+      [(posnum-expr? root-object) (list "posnum-expr" (parse-object-to-list (posnum-expr-posnumber root-object)))]
+      [(null-expr? root-object) (list "null-expr")]
+      [(bool-expr? root-object) (list "bool-expr" (parse-object-to-list (bool-expr-val root-object)))]
+      [(var-expr? root-object) (list "var-expr" (parse-object-to-list (var-expr-var root-object)))]
+      [(string-expr? root-object) (list "string-expr" (parse-object-to-list (string-expr-string-val root-object)))]
+      [(list-expr? root-object) (list "list-expr" (parse-object-to-list (list-expr-l root-object)))]
+      [(listmem-expr? root-object) (list "listmem-expr" (parse-object-to-list (listmem-expr-var root-object)) (parse-object-to-list (listmem-expr-lm root-object)))]
+
+      [(listValues-expr? root-object) (list "listValues-expr" (parse-object-to-list (listValues-expr-lv root-object)))]
+      [(empty-list-expr? root-object) (list "empty-list-expr")]
+
+      [(val-exp-expr? root-object) (list "val-exp-expr" (parse-object-to-list (listValues-exp1 root-object)))]
+      [(extended-listValues-expr? root-object) (list "extended-listValues-expr" (parse-object-to-list (listValues-exp1 root-object)) (parse-object-to-list (extended-listValues-expr-lv root-object)))]
+
+      [(idx-expr? root-object) (list "idx-expr" (parse-object-to-list (listmem-exp1 root-object)))]
+      [(multi-idx-expr? root-object) (list "multi-idx-expr" (parse-object-to-list (listmem-exp1 root-object)) (parse-object-to-list (multi-idx-expr-lm root-object)))]
+
+      [else root-object]
+
+      )))
+
+
 ;test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this our-lexer (open-input-string "a = 7; return 3*5")))
-(let ((parser-res (our-parser my-lexer))) parser-res)
+(define my-lexer (lex-this our-lexer (open-input-string "if x[4] == 3 then a = 6 else a = [17, 1, 2] endif; while x == 4 do b = b - 1; a = 7 end")))
+;(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)
+(let ((parser-res (our-parser my-lexer))) (parse-object-to-list parser-res))
+;(list? (list 1))
