@@ -4,6 +4,10 @@
 (require "parser.rkt")
 (require "env.rkt")
 
+(require (except-in racket < > =)
+         (rename-in racket [< old<] [> old>] [= old=] ))
+
+
 (struct expval (value))
 (struct our-list-expval expval ())
 (struct bool-expval expval ())
@@ -91,11 +95,61 @@
 
 
 
+
+; here we customize comparator functions:
+
+
+(define <
+  (lambda (a b)
+  (cond
+    [(or (null? a) (null? b)) #f]
+    [(and (string? a) (string? b)) (equal? a b)]
+    [(and (list? a) (list? b)) (display "can not compare two lists")]
+    [(list? a)  (if (null? (cdr a)) #t (and (< (car a) b) (< (cdr a) b)))]
+    [(list? b)  (if (null? (cdr b)) #t (and (< a (car b)) (< a (cdr b))))]
+    [else (old< a b)]
+      )))
+
+
+
+
+(define >
+  (lambda (a b)
+  (cond
+    [(or (null? a) (null? b)) #f]
+    [(and (string? a) (string? b)) (equal? a b)]
+    [(and (list? a) (list? b)) (display "can not compare two lists")]
+    [(list? a)  (if (null? (cdr a)) #t (and (> (car a) b) (> (cdr a) b)))]
+    [(list? b)  (if (null? (cdr b)) #t (and (> a (car b)) (> a (cdr b))))]
+    [else (old> a b)]
+      )))
+
+
+
+(define =
+  (lambda (a b)
+  (cond
+    [(and (null? a) (null? b)) #t]
+    [(or (null? a) (null? b)) #f]
+    [(and (string? a) (string? b)) (equal? a b)]
+    [(and (list? a) (list? b)) (and (= (car a) (car b)) (= (cdr a) (cdr b)))]
+    [(list? a)  (if (null? (cdr a)) #t (and (= (car a) b) (= (cdr a) b)))]
+    [(list? b)  (if (null? (cdr b)) #t (and (= a (car b)) (= a (cdr b))))]
+    [ (or (and (boolean? a) (number? b)) (and (boolean? b) (number? a))
+          (and (string? a) (number? b)) (and (string? b) (number? a))
+          (and (string? a) (boolean? b)) (and (string? b) (boolean? a)))
+      #f]
+    [else (old= a b)]
+      )))
+
+
+
+
 (define value-of-return-expr
   lambda (r env)
   (value-of-expression (return-expr-exp r) env))
 
-(define value-of-expression  ;; fix these for non numbers
+(define value-of-expression  ;; fixed
   (lambda (e env)
   (cond
     [(aexp-expr? e) (value-of-aexpression (expression-a1 e) env)]
