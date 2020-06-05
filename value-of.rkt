@@ -2,6 +2,7 @@
 
 
 (require "parser.rkt")
+(require "env.rkt")
 
 (struct expval (value))
 (struct our-list-expval expval ())
@@ -38,26 +39,21 @@
 (define value-of-command
   lambda (com env)
   (cond
-    [(unitcom-expr? com) (value-of-unitcom com env)]
+    [(unitcom-expr? com) (value-of-unitcom (unitcom-expr-ucom com) env)]
     [(multi-command-expr? com) (begin
                                (value-of-command (multi-command-expr-mcom com) env)
                                (value-of-unitcom (multi-command-expr-ucom com) env))]))
 
 (define value-of-unitcom
   lambda (ucom env)
-
-  (let ([ucom (unitcom-expr-ucom)])
     (cond
     [(whilecom-expr? ucom) (value-of-while-expr (whilecom-expr-whileexpr ucom) env)]
     [(ifcom-expr? ucom) (value-of-if-expr (ifcom-expr-ifexpr ucom) env)]
     [(assigncom-expr? ucom) (value-of-assign-expr (assigncom-expr-assignexpr ucom) env)]
-    [(returncom-expr? ucom) (value-of-return-expr (returncom-expr-returnexpr ucom) env)])))
+    [(returncom-expr? ucom) (value-of-return-expr (returncom-expr-returnexpr ucom) env)]))
 
-(define value-of-while-expr)
 
-(define value-of-if-expr)
 
-(define value-of-assign-expr)
 
 (define value-of-return-expr
   lambda (r env)
