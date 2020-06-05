@@ -6,7 +6,6 @@
 (struct expval (value))
 (struct our-list-expval expval ())
 (struct bool-expval expval ())
-(struct null-expval expval ())
 
 
 (define racket-list->expval
@@ -15,25 +14,10 @@
       [(list? l) (our-list-expval l)]
       [else (display "Error")])))
 
-
-
 (define bool->expval
   (lambda (b)
     (cond
       [(boolean? b) (bool-expval b)]
-      [else (display "Error")])))
-
-(define null->expval
-  (lambda (b)
-    (cond
-      [(null? b) (null-expval `())]
-      [else (display "Error")])))
-
-
-(define string->expval
-  (lambda (b)
-    (cond
-      [(null? b) (string-expval b)]
       [else (display "Error")])))
 
 
