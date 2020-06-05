@@ -56,8 +56,8 @@
   (lambda (whileexpr env)
     (cond
       [(while-expr? whileexpr)  (if (bool-expval-value 
-                                 (value-of-expression while-expr-exp env))
-                                    (begin (value-of-command while-expr-com env)
+                                 (value-of-expression (while-expr-exp whileexpr)  env))
+                                    (begin (value-of-command (while-expr-com whileexpr) env)
                                        (value-of-while-expr whileexpr env))
                                     `())
                                     ]
@@ -71,9 +71,9 @@
   (lambda (ifexpr env)
     (cond
       [(if-expr? ifexpr)  (if (bool-expval-value 
-                                 (value-of-expression if-expr-exp1 env))
-                                     (value-of-command if-expr-com1 env)
-                                       (value-of-command if-expr-com2 env))
+                                 (value-of-expression (if-expr-exp1 ifexpr) env))
+                                     (value-of-command (if-expr-com1 ifexpr) env)
+                                       (value-of-command (if-expr-com2 ifexpr) env))
                                     ]
       [else (display "not a ifcom")])))
 
@@ -82,7 +82,7 @@
 (define value-of-assign-expr
     (lambda (assignexpr env)
     (cond
-      [(assign-expr? assignexpr)  (extend-env assign-expr-var (value-of-experession assign-expr-exp env) env)]
+      [(assign-expr? assignexpr)  (extend-env (assign-expr-var assignexpr) (value-of-experession (assign-expr-exp assignexpr) env) env)]
                           
       [else (display "not a assigncom")])))
 
