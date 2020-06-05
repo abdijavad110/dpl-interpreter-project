@@ -6,7 +6,7 @@
 (struct expval (value))
 (struct our-list-expval expval ())
 (struct bool-expval expval ())
-(struct null-expval expval ())
+(struct int-expval expval ())
 (struct string-expval expval ())
 
 
@@ -16,25 +16,22 @@
       [(list? l) (our-list-expval l)]
       [else (display "Error")])))
 
-
-
 (define bool->expval
   (lambda (b)
     (cond
       [(boolean? b) (bool-expval b)]
       [else (display "Error")])))
 
-(define null->expval
-  (lambda (b)
+(define int->expval
+  (lambda (i)
     (cond
-      [(null? b) (null-expval `())]
+      [(number? i) (int-expval i)]
       [else (display "Error")])))
 
-
 (define string->expval
-  (lambda (b)
+  (lambda (s)
     (cond
-      [(null? b) (string-expval b)]
+      [(string? s) (string-expval s)]
       [else (display "Error")])))
 
 
@@ -66,39 +63,55 @@
   lambda (r env)
   (value-of-expression (return-expr-exp r) env))
 
-(define value-of-expression
-  lambda (e env)
+(define value-of-expression  ;; fix these for non numbers
+  (lambda (e env)
   (cond
     [(aexp-expr? e) (value-of-aexpression (expression-a1 e) env)]
-    [(greater?-expr? e) (> (value-of-aexpression (expression-a1 e) env) (value-of-aexpression (expression-a2 e) env))] ; fix this
-    [(smaller?-expr? e) (< (value-of-aexpression (expression-a1 e) env) (value-of-aexpression (expression-a2 e) env))] ; fix this
-    [(equal?-expr? e) (= (value-of-aexpression (expression-a1 e) env) (value-of-aexpression (expression-a2 e) env))] ; fix this
-    [(not-equal?-expr? e) (not (value-of-aexpression (expression-a1 e) env) (value-of-aexpression (expression-a2 e) env))])) ; fix this
+    [(greater?-expr? e) (bool->expval (>
+                                       (expval-value (value-of-aexpression (expression-a1 e) env))
+                                       (expval-value (value-of-aexpression (expression-a2 e) env))))]
+    [(smaller?-expr? e) (bool->expval (<
+                                       (expval-value (value-of-aexpression (expression-a1 e) env))
+                                       (expval-value (value-of-aexpression (expression-a2 e) env))))]
+    [(equal?-expr? e) (bool->expval (=
+                                       (expval-value (value-of-aexpression (expression-a1 e) env))
+                                       (expval-value (value-of-aexpression (expression-a2 e) env))))]
+    [(not-equal?-expr? e) (bool->expval (not (=
+                                       (expval-value (value-of-aexpression (expression-a1 e) env))
+                                       (expval-value (value-of-aexpression (expression-a2 e) env)))))])))
 
-(define value-of-aexpression
-  lambda (a env)
+(define value-of-aexpression  ;; fix these for non numbers
+  (lambda (a env)
   (cond
     [(bexp-expr? a) (value-of-bexpression (aexpression-b1 a) env)]
-    [(minus-expr? a) (- (value-of-bexpression (aexpression-b1 a) env) (value-of-aexpression (aexpression-a1 a) env))] ; fix this
-    [(plus-expr? a) (+ (value-of-bexpression (aexpression-b1 a) env) (value-of-aexpression (aexpression-a1 a) env))])) ; fix this
+    [(minus-expr? a) (int-> expval (-
+                                    (expval-value (value-of-bexpression (aexpression-b1 a) env))
+                                    (expval-value (value-of-aexpression (aexpression-a1 a) env))))]
+    [(plus-expr? a) (int-> expval (+
+                                    (expval-value (value-of-bexpression (aexpression-b1 a) env))
+                                    (expval-value (value-of-aexpression (aexpression-a1 a) env))))])))
 
-(define value-of-bexpression
-  lambda (b env)
+(define value-of-bexpression  ;; fix these for non numbers
+  (lambda (b env)
   (cond
     [(cexp-expr? b) (value-of-cexpression (bexpression-c1 b) env)]
-    [(mult-expr? b) (* (value-of-cexpression (bexpression-c1 b) env) (value-of-bexpression (bexpression-b1 b) env))] ; fix this
-    [(divide-expr? b) (/ (value-of-cexpression (bexpression-c1 b) env) (value-of-bexpression (bexpression-b1 b) env))])) ; fix this
+    [(mult-expr? b) (int-> expval (*
+                                   (expval-value (value-of-cexpression (bexpression-c1 b) env))
+                                   (expval-value (value-of-bexpression (bexpression-b1 b) env))))]
+    [(divide-expr? b) (int-> expval (/
+                                   (expval-value (value-of-cexpression (bexpression-c1 b) env))
+                                   (expval-value (value-of-bexpression (bexpression-b1 b) env))))])))
 
 (define value-of-cexpression
   (lambda (c env)
     (cond
-      [(neg-expr? c) (- (value-of-cexpression (neg-expr-c1 c) env))] ; fix this
+      [(neg-expr? c) (int->expval (- (expval-value (value-of-cexpression (neg-expr-c1 c) env))))] ; fix this for non numbers
       [(par-expr? c) (value-of-expression (par-expr-c1 c) env)]
-      [(posnum-expr? c) ()] ; fix this
+      [(posnum-expr? c) (int->expval (posnum-expr-posnumber c))]
       [(null-expr? c) ()] ; fix this
-      [(bool-expr? c) ()] ; fix this
+      [(bool-expr? c) (bool->expval (bool-expr-val c))]
       [(var-expr? c) ()] ; fix this
-      [(string-expr? c) ()] ; fix this
+      [(string-expr? c) (string->expval (string-expr-string-val c))]
       [(list-expr? c) (value-of-our-list (list-expr-l c) env)]
       [(listmem-expr? c) ()]))) ; fix this
 
