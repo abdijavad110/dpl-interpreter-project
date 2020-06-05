@@ -7,6 +7,7 @@
 (struct our-list-expval expval ())
 (struct bool-expval expval ())
 (struct null-expval expval ())
+(struct string-expval expval ())
 
 
 (define racket-list->expval
@@ -40,18 +41,20 @@
 (define value-of-command
   lambda (com env)
   (cond
-    [(unitcom-expr? com) (value-of-unitcom (unitcom-expr-ucom com) env)]
+    [(unitcom-expr? com) (value-of-unitcom com env)]
     [(multi-command-expr? com) (begin
                                (value-of-command (multi-command-expr-mcom com) env)
                                (value-of-unitcom (multi-command-expr-ucom com) env))]))
 
 (define value-of-unitcom
   lambda (ucom env)
-  (cond
+
+  (let ([ucom (unitcom-expr-ucom)])
+    (cond
     [(whilecom-expr? ucom) (value-of-while-expr (whilecom-expr-whileexpr ucom) env)]
     [(ifcom-expr? ucom) (value-of-if-expr (ifcom-expr-ifexpr ucom) env)]
     [(assigncom-expr? ucom) (value-of-assign-expr (assigncom-expr-assignexpr ucom) env)]
-    [(returncom-expr? ucom) (value-of-return-expr (returncom-expr-returnexpr ucom) env)]))
+    [(returncom-expr? ucom) (value-of-return-expr (returncom-expr-returnexpr ucom) env)])))
 
 (define value-of-while-expr)
 
