@@ -52,6 +52,42 @@
     [(assigncom-expr? ucom) (value-of-assign-expr (assigncom-expr-assignexpr ucom) env)]
     [(returncom-expr? ucom) (value-of-return-expr (returncom-expr-returnexpr ucom) env)]))
 
+(define value-of-while-expr
+  (lambda (whileexpr env)
+    (cond
+      [(while-expr? whileexpr)  (if (bool-expval-value 
+                                 (value-of-expression while-expr-exp env))
+                                    (begin (value-of-command while-expr-com env)
+                                       (value-of-while-expr whileexpr env))
+                                    `())
+                                    ]
+      [else (display "not a whilecom")])))
+
+
+
+     
+
+(define value-of-if-expr
+  (lambda (ifexpr env)
+    (cond
+      [(if-expr? ifexpr)  (if (bool-expval-value 
+                                 (value-of-expression if-expr-exp1 env))
+                                     (value-of-command if-expr-com1 env)
+                                       (value-of-command if-expr-com2 env))
+                                    ]
+      [else (display "not a ifcom")])))
+
+
+
+(define value-of-assign-expr
+    (lambda (assignexpr env)
+    (cond
+      [(assign-expr? assignexpr)  (extend-env assign-expr-var (value-of-experession assign-expr-exp env) env)]
+                          
+      [else (display "not a assigncom")])))
+
+
+
 
 
 
