@@ -5,6 +5,9 @@
          parser-tools/yacc)
 (provide (all-defined-out))
 
+
+
+
 (define our-lexer
   (lexer
    (whitespace (our-lexer input-port))
@@ -50,7 +53,15 @@
 (define-tokens a (VARIABLE POS STRING operator))
 (define-empty-tokens b (EOF SEMICOL COMMA = < > == != + - * / LPAR RPAR LBRACKET RBRACKET WHILE DO END IF THEN ELSE ENDIF RETURN NULL TRUE FALSE))
 
+(define evaluate
+    (lambda (path)
+      (file->string path)))
+
 ;test
-;(define lex-this (lambda (lexer input) (lambda () (lexer input))))
+(define lex-this (lambda (lexer input) (lambda () (lexer input))))
 ;(define my-lexer (lex-this our-lexer (open-input-string "while <>= == != ( ) [ ] a do b + 3; end")))
 ;(let ((parser-res (our-parser my-lexer))) parser-res)
+
+
+(display "read")
+(define my-lexer (lex-this our-lexer (evaluate "a.txt")))

@@ -58,7 +58,7 @@
     [(whilecom-expr? ucom) (value-of-while-expr (whilecom-expr-whileexpr ucom) env)]
     [(ifcom-expr? ucom) (value-of-if-expr (ifcom-expr-ifexpr ucom) env)]
     [(assigncom-expr? ucom) (value-of-assign-expr (assigncom-expr-assignexpr ucom) env)]
-    [(returncom-expr? ucom) (value-of-return-expr (returncom-expr-returnexpr ucom) env)]))
+    [(returncom-expr? ucom) (begin (value-of-return-expr (returncom-expr-returnexpr ucom) env) (exit))]))
 
 (define value-of-while-expr
   (lambda (whileexpr env)
