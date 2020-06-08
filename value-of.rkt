@@ -104,8 +104,8 @@
     [(or (null? a) (null? b)) #f]
     [(and (string? a) (string? b)) (equal? a b)]  ; fix this
     [(and (list? a) (list? b)) (display "can not compare two lists")]
-    [(list? a)  (if (null? (cdr a)) #t (and (< (car a) b) (< (cdr a) b)))]  ; check cdr a or a?
-    [(list? b)  (if (null? (cdr b)) #t (and (< a (car b)) (< a (cdr b))))]  ; check cdr a or a?
+    [(list? a)  (if (null? (cdr a)) (< (car a) b) (and (< (car a) b) (< (cdr a) b)))]
+    [(list? b)  (if (null? (cdr b)) (< a (car b)) (and (< a (car b)) (< a (cdr b))))]
     [else (old< a b)]
       )))
 
@@ -115,8 +115,8 @@
     [(or (null? a) (null? b)) #f]
     [(and (string? a) (string? b)) (equal? a b)]  ; fix this
     [(and (list? a) (list? b)) (display "can not compare two lists")]
-    [(list? a)  (if (null? (cdr a)) #t (and (> (car a) b) (> (cdr a) b)))]  ; check cdr a or a?
-    [(list? b)  (if (null? (cdr b)) #t (and (> a (car b)) (> a (cdr b))))]  ; check cdr a or a?
+    [(list? a)  (if (null? (cdr a)) (> (car a) b) (and (> (car a) b) (> (cdr a) b)))]
+    [(list? b)  (if (null? (cdr b)) (> a (car b)) (and (> a (car b)) (> a (cdr b))))]
     [else (old> a b)]
       )))
 
@@ -125,8 +125,8 @@
   (cond
     [(and (null? a) (null? b)) #t]
     [(and (list? a) (list? b)) (if (old= (length a) (length b)) (and (= (car a) (car b)) (= (cdr a) (cdr b))) #f)]
-    [(list? a)  (if (null? (cdr a)) #t (and (= (car a) b) (= (cdr a) b)))]  ; check cdr a or a?
-    [(list? b)  (if (null? (cdr b)) #t (and (= a (car b)) (= a (cdr b))))]  ; check cdr a or a?
+    [(list? a)  (if (null? (cdr a)) (= (car a) b) (and (= (car a) b) (= (cdr a) b)))]
+    [(list? b)  (if (null? (cdr b)) (= a (car b)) (and (= a (car b)) (= a (cdr b))))]
     [(or (null? a) (null? b)) #f]
     [(and (string? a) (string? b)) (equal? a b)]
     [(and (boolean? a) (boolean? b)) (not (xor a b))]
@@ -144,8 +144,8 @@
     [(and (string? a) (string? b)) (equal? a b)]
     [(and (boolean? a) (boolean? b)) (xor a b)]
     [(and (list? a) (list? b)) (if (old= (length a) (length b)) #t (and (!= (car a) (car b)) (!= (cdr a) (cdr b))))]
-    [(list? a)  (if (null? (cdr a)) #f (or (!= (car a) b) (!= (cdr a) b)))]  ; check cdr a or a?
-    [(list? b)  (if (null? (cdr b)) #f (or (!= a (car b)) (!= a (cdr b))))]  ; check cdr a or a?
+    [(list? a)  (if (null? (cdr a)) (!= (car a) b) (or (!= (car a) b) (!= (cdr a) b)))]
+    [(list? b)  (if (null? (cdr b)) (!= a (car b)) (or (!= a (car b)) (!= a (cdr b))))]
     [(or (null? a) (null? b)) #f]
     [ (or (and (boolean? a) (number? b)) (and (boolean? b) (number? a))
           (and (string? a) (number? b)) (and (string? b) (number? a))
@@ -155,11 +155,33 @@
       )))
 
 
+;; custom operators:
+(define neg
+    (lambda (a)
+     [(number? a) (int->expval (- a))]
+     [(boolean? a) (bool->expval (not a))]
+     [(list? a) (if (null? (cdr a)) (neg (car a)) (cons (neg (car a)) (neg (cdr a))))]
+     [else (display "invalid argument after -")]))
+
+(define operator-helper
+    (lambda (f a b)
+     (cond
+      [(and (number? a) (number? b)) (int->expval (f a b))]
+      [(and (boolean? a) (boolean? b)) (cond
+                                        [(equal? f +) (bool->expval (or a b))]
+                                        [(equal? f *) (bool->expval (and a b))]
+                                        [else (display "invalid operation between booleans")]))]
+      [(and (string? a) (string? b) (equal? f +)) (string->expval (string-append a b))]
+      [(and (list? a) (list? b)) (append a b)]
+      [(list? a)  (if (null? (cdr a)) (f (car a) b) (cons (f (car a) b) (f (cdr a) b)))]
+      [(list? b)  (if (null? (cdr b)) (f a (car b)) (cons (f a (car b)) (f a (cdr b))))]
+      [else (display "invalid arguments for operator")])))
+
 
 
 (define value-of-return-expr
-  lambda (r env)
-  (value-of-expression (return-expr-exp r) env))
+  (lambda (r env)
+  (value-of-expression (return-expr-exp r) env)))
 
 (define value-of-expression
   (lambda (e env)
@@ -178,37 +200,37 @@
                                        (expval-value (value-of-aexpression (expression-a1 e) env))
                                        (expval-value (value-of-aexpression (expression-a2 e) env)))))])))
 
-(define value-of-aexpression  ;; fix these for non numbers
+(define value-of-aexpression
   (lambda (a env)
   (cond
     [(bexp-expr? a) (value-of-bexpression (aexpression-b1 a) env)]
-    [(minus-expr? a) (int->expval (-
-                                    (expval-value (value-of-bexpression (aexpression-b1 a) env))
-                                    (expval-value (value-of-aexpression (aexpression-a1 a) env))))]
-    [(plus-expr? a) (int->expval (+
-                                    (expval-value (value-of-bexpression (aexpression-b1 a) env))
-                                    (expval-value (value-of-aexpression (aexpression-a1 a) env))))])))
+    [(minus-expr? a) (operator-helper -
+                        (expval-value (value-of-bexpression (aexpression-b1 a) env))
+                        (expval-value (value-of-aexpression (aexpression-a1 a) env)))]
+    [(plus-expr? a) (operator-helper +
+                        (expval-value (value-of-bexpression (aexpression-b1 a) env))
+                        (expval-value (value-of-aexpression (aexpression-a1 a) env)))])))
 
-(define value-of-bexpression  ;; fix these for non numbers
+(define value-of-bexpression
   (lambda (b env)
   (cond
     [(cexp-expr? b) (value-of-cexpression (bexpression-c1 b) env)]
-    [(mult-expr? b) (int-> expval (*
+    [(mult-expr? b) (operator-helper *
                                    (expval-value (value-of-cexpression (bexpression-c1 b) env))
-                                   (expval-value (value-of-bexpression (bexpression-b1 b) env))))]
-    [(divide-expr? b) (int-> expval (/
+                                   (expval-value (value-of-bexpression (bexpression-b1 b) env)))]
+    [(divide-expr? b) (operator-helper /
                                    (expval-value (value-of-cexpression (bexpression-c1 b) env))
-                                   (expval-value (value-of-bexpression (bexpression-b1 b) env))))])))
+                                   (expval-value (value-of-bexpression (bexpression-b1 b) env)))])))
 
 (define value-of-cexpression
   (lambda (c env)
     (cond
-      [(neg-expr? c) (int->expval (- (expval-value (value-of-cexpression (neg-expr-c1 c) env))))] ; fix this for non numbers
+      [(neg-expr? c) (neg (expval-value (value-of-cexpression (neg-expr-c1 c) env)))]
       [(par-expr? c) (value-of-expression (par-expr-c1 c) env)]
       [(posnum-expr? c) (int->expval (posnum-expr-posnumber c))]
-      [(null-expr? c) ()] ; fix this
+      [(null-expr? c) (null->expval)]
       [(bool-expr? c) (bool->expval (bool-expr-val c))]
-      [(var-expr? c) ()] ; fix this
+      [(var-expr? c) (apply-env env (var-expr-var c))]
       [(string-expr? c) (string->expval (string-expr-string-val c))]
       [(list-expr? c) (value-of-our-list (list-expr-l c) env)]
       [(listmem-expr? c) ()]))) ; fix this
