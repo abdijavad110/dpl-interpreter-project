@@ -155,12 +155,12 @@
       )))
 
 
-;; custom operators:
-(define neg
+;; helpers:
+(define neg-helper
     (lambda (a)
      [(number? a) (int->expval (- a))]
      [(boolean? a) (bool->expval (not a))]
-     [(list? a) (if (null? (cdr a)) (neg (car a)) (cons (neg (car a)) (neg (cdr a))))]
+     [(list? a) (if (null? (cdr a)) (neg-helper (car a)) (cons (neg-helper (car a)) (neg-helper (cdr a))))]
      [else (display "invalid argument after -")]))
 
 (define operator-helper
@@ -176,6 +176,10 @@
       [(list? a)  (if (null? (cdr a)) (f (car a) b) (cons (f (car a) b) (f (cdr a) b)))]
       [(list? b)  (if (null? (cdr b)) (f a (car b)) (cons (f a (car b)) (f a (cdr b))))]
       [else (display "invalid arguments for operator")])))
+
+(define reference-helper
+    (lambda (l idx)
+     (if (null? (cdr l)) (list-ref l (car idx)) (list-ref (reverse (cdr (reverse idx))) (car (reverse idx)))))) ; check this line
 
 
 
@@ -225,7 +229,7 @@
 (define value-of-cexpression
   (lambda (c env)
     (cond
-      [(neg-expr? c) (neg (expval-value (value-of-cexpression (neg-expr-c1 c) env)))]
+      [(neg-expr? c) (neg-helper (expval-value (value-of-cexpression (neg-expr-c1 c) env)))]
       [(par-expr? c) (value-of-expression (par-expr-c1 c) env)]
       [(posnum-expr? c) (int->expval (posnum-expr-posnumber c))]
       [(null-expr? c) (null->expval)]
@@ -233,7 +237,7 @@
       [(var-expr? c) (apply-env env (var-expr-var c))]
       [(string-expr? c) (string->expval (string-expr-string-val c))]
       [(list-expr? c) (value-of-our-list (list-expr-l c) env)]
-      [(listmem-expr? c) ()]))) ; fix this
+      [(listmem-expr? c) (reference-helper (apply-env env (listmem-expr-var c)) (expval-value (value-of-listmem listmem-expr-lm)))])))
 
 (define value-of-listValues
   (lambda (lv env)
