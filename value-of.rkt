@@ -161,7 +161,7 @@
   lambda (r env)
   (value-of-expression (return-expr-exp r) env))
 
-(define value-of-expression  ;; fixed
+(define value-of-expression
   (lambda (e env)
   (cond
     [(aexp-expr? e) (value-of-aexpression (expression-a1 e) env)]
@@ -174,7 +174,7 @@
     [(equal?-expr? e) (bool->expval (=
                                        (expval-value (value-of-aexpression (expression-a1 e) env))
                                        (expval-value (value-of-aexpression (expression-a2 e) env))))]
-    [(not-equal?-expr? e) (bool->expval (not (=
+    [(not-equal?-expr? e) (bool->expval (!=
                                        (expval-value (value-of-aexpression (expression-a1 e) env))
                                        (expval-value (value-of-aexpression (expression-a2 e) env)))))])))
 
@@ -182,10 +182,10 @@
   (lambda (a env)
   (cond
     [(bexp-expr? a) (value-of-bexpression (aexpression-b1 a) env)]
-    [(minus-expr? a) (int-> expval (-
+    [(minus-expr? a) (int->expval (-
                                     (expval-value (value-of-bexpression (aexpression-b1 a) env))
                                     (expval-value (value-of-aexpression (aexpression-a1 a) env))))]
-    [(plus-expr? a) (int-> expval (+
+    [(plus-expr? a) (int->expval (+
                                     (expval-value (value-of-bexpression (aexpression-b1 a) env))
                                     (expval-value (value-of-aexpression (aexpression-a1 a) env))))])))
 
