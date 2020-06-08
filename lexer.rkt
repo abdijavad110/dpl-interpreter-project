@@ -63,5 +63,5 @@
 ;(let ((parser-res (our-parser my-lexer))) parser-res)
 
 
-(display "read")
-(define my-lexer (lex-this our-lexer (evaluate "a.txt")))
+;(display "read")
+;(define my-lexer (lex-this our-lexer (evaluate "a.txt")))

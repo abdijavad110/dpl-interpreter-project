@@ -1,6 +1,7 @@
 #lang racket
 
 
+(require "lexer.rkt")
 (require "parser.rkt")
 (require "env.rkt")
 
@@ -45,25 +46,25 @@
 
 
 (define value-of-command
-  lambda (com env)
-  (cond
-    [(unitcom-expr? com) (value-of-unitcom (unitcom-expr-ucom com) env)]
-    [(multi-command-expr? com) (begin
+  (lambda (com env)
+    (cond
+      [(unitcom-expr? com) (value-of-unitcom (unitcom-expr-ucom com) env)]
+      [(multi-command-expr? com) (begin
                                (value-of-command (multi-command-expr-mcom com) env)
-                               (value-of-unitcom (multi-command-expr-ucom com) env))]))
+                               (value-of-unitcom (multi-command-expr-ucom com) env))])))
 
 (define value-of-unitcom
-  lambda (ucom env)
+  (lambda (ucom env)
     (cond
     [(whilecom-expr? ucom) (value-of-while-expr (whilecom-expr-whileexpr ucom) env)]
     [(ifcom-expr? ucom) (value-of-if-expr (ifcom-expr-ifexpr ucom) env)]
     [(assigncom-expr? ucom) (value-of-assign-expr (assigncom-expr-assignexpr ucom) env)]
-    [(returncom-expr? ucom) (begin (value-of-return-expr (returncom-expr-returnexpr ucom) env) (exit))]))
+    [(returncom-expr? ucom) (begin (value-of-return-expr (returncom-expr-returnexpr ucom) env) (exit))])))
 
 (define value-of-while-expr
   (lambda (whileexpr env)
     (cond
-      [(while-expr? whileexpr)  (if (bool-expval-value 
+      [(while-expr? whileexpr)  (if (expval-value 
                                  (value-of-expression (while-expr-exp whileexpr)  env))
                                     (begin (value-of-command (while-expr-com whileexpr) env)
                                        (value-of-while-expr whileexpr env))
@@ -78,7 +79,7 @@
 (define value-of-if-expr
   (lambda (ifexpr env)
     (cond
-      [(if-expr? ifexpr)  (if (bool-expval-value 
+      [(if-expr? ifexpr)  (if (expval-value 
                                  (value-of-expression (if-expr-exp1 ifexpr) env))
                                      (value-of-command (if-expr-com1 ifexpr) env)
                                        (value-of-command (if-expr-com2 ifexpr) env))
@@ -89,11 +90,9 @@
 
 (define value-of-assign-expr
     (lambda (assignexpr env)
-    (cond
-      [(assign-expr? assignexpr)  (extend-env (assign-expr-var assignexpr) (value-of-experession (assign-expr-exp assignexpr) env) )]
-                          
-      [else (display "not a assigncom")])))
-
+      (cond
+        [(assign-expr? assignexpr)  (extend-env (assign-expr-var assignexpr) (value-of-expression (assign-expr-exp assignexpr) env) )]                  
+        [else (display "not a assigncom")])))
 
 
 ; here we customize comparator functions:
@@ -179,7 +178,8 @@
      [(number? a) (int->expval (- a))]
      [(boolean? a) (bool->expval (not a))]
      [(list? a) (if (null? (cdr a)) (neg-helper (car a)) (cons (neg-helper (car a)) (neg-helper (cdr a))))]
-     [else (display "invalid argument after -")]))
+     ;[else (display "invalid argument after dash")] ;TODO
+     ))
 
 (define operator-helper
     (lambda (f a b)
@@ -188,7 +188,7 @@
       [(and (boolean? a) (boolean? b)) (cond
                                         [(equal? f +) (bool->expval (or a b))]
                                         [(equal? f *) (bool->expval (and a b))]
-                                        [else (display "invalid operation between booleans")]))]
+                                        [else (display "invalid operation between booleans")])]
       [(and (string? a) (string? b) (equal? f +)) (string->expval (string-append a b))]
       [(and (list? a) (list? b)) (append a b)]
       [(list? a)  (if (null? (cdr a)) (f (car a) b) (cons (f (car a) b) (f (cdr a) b)))]
@@ -207,20 +207,20 @@
 
 (define value-of-expression
   (lambda (e env)
-  (cond
-    [(aexp-expr? e) (value-of-aexpression (expression-a1 e) env)]
-    [(greater?-expr? e) (bool->expval (>
-                                       (expval-value (value-of-aexpression (expression-a1 e) env))
-                                       (expval-value (value-of-aexpression (expression-a2 e) env))))]
-    [(smaller?-expr? e) (bool->expval (<
-                                       (expval-value (value-of-aexpression (expression-a1 e) env))
-                                       (expval-value (value-of-aexpression (expression-a2 e) env))))]
-    [(equal?-expr? e) (bool->expval (=
-                                       (expval-value (value-of-aexpression (expression-a1 e) env))
-                                       (expval-value (value-of-aexpression (expression-a2 e) env))))]
-    [(not-equal?-expr? e) (bool->expval (!=
-                                       (expval-value (value-of-aexpression (expression-a1 e) env))
-                                       (expval-value (value-of-aexpression (expression-a2 e) env)))))])))
+    (cond
+      [(aexp-expr? e) (value-of-aexpression (expression-a1 e) env)]
+      [(greater?-expr? e) (bool->expval (>
+                                         (expval-value (value-of-aexpression (expression-a1 e) env))
+                                         (expval-value (value-of-aexpression (greater?-expr-a2 e) env))))]
+      [(smaller?-expr? e) (bool->expval (<
+                                         (expval-value (value-of-aexpression (expression-a1 e) env))
+                                         (expval-value (value-of-aexpression (smaller?-expr-a2 e) env))))]
+      [(equal?-expr? e) (bool->expval (=
+                                         (expval-value (value-of-aexpression (expression-a1 e) env))
+                                         (expval-value (value-of-aexpression (equal?-expr-a2 e) env))))]
+      [(not-equal?-expr? e) (bool->expval (!=
+                                         (expval-value (value-of-aexpression (expression-a1 e) env))
+                                         (expval-value (value-of-aexpression (not-equal?-expr-a2 e) env))))])))
 
 (define value-of-aexpression
   (lambda (a env)
@@ -228,10 +228,10 @@
     [(bexp-expr? a) (value-of-bexpression (aexpression-b1 a) env)]
     [(minus-expr? a) (operator-helper -
                         (expval-value (value-of-bexpression (aexpression-b1 a) env))
-                        (expval-value (value-of-aexpression (aexpression-a1 a) env)))]
+                        (expval-value (value-of-aexpression (minus-expr-a1 a) env)))]
     [(plus-expr? a) (operator-helper +
                         (expval-value (value-of-bexpression (aexpression-b1 a) env))
-                        (expval-value (value-of-aexpression (aexpression-a1 a) env)))])))
+                        (expval-value (value-of-aexpression (plus-expr-a1 a) env)))])))
 
 (define value-of-bexpression
   (lambda (b env)
@@ -239,10 +239,10 @@
     [(cexp-expr? b) (value-of-cexpression (bexpression-c1 b) env)]
     [(mult-expr? b) (operator-helper *
                                    (expval-value (value-of-cexpression (bexpression-c1 b) env))
-                                   (expval-value (value-of-bexpression (bexpression-b1 b) env)))]
+                                   (expval-value (value-of-bexpression (mult-expr-b1 b) env)))]
     [(divide-expr? b) (operator-helper /
                                    (expval-value (value-of-cexpression (bexpression-c1 b) env))
-                                   (expval-value (value-of-bexpression (bexpression-b1 b) env)))])))
+                                   (expval-value (value-of-bexpression (divide-expr-b1 b) env)))])))
 
 (define value-of-cexpression
   (lambda (c env)
@@ -276,7 +276,7 @@
       [(multi-idx-expr? lm) (cons (value-of-expression (listmem-exp1 lm) env) (value-of-listmem (multi-idx-expr-lm lm) env))])))
 
 ;test
-;(define lex-this (lambda (lexer input) (lambda () (lexer input))))
-;(define my-lexer (lex-this our-lexer (open-input-string "if x[4] == 3 then a = 6 else a = [17, 1, 2] endif; while x == 4 do b = b - 1; a = 7 end")))
+(define lex-this (lambda (lexer input) (lambda () (lexer input))))
+(define my-lexer (lex-this our-lexer (open-input-string "if x[4] == 3 then a = 6 else a = [17, 1, 2] endif; while x == 4 do b = b - 1; a = 7 end")))
 ;(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)
-;(let ((parser-res (our-parser my-lexer))) (parse-object-to-list parser-res))
+(let ((parser-res (our-parser my-lexer))) (value-of-command parser-res (empty-env))) ;(parse-object-to-list parser-res))

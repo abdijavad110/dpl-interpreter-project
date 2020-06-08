@@ -1,5 +1,6 @@
 #lang racket
 
+(provide (all-defined-out))
 (define empty-env
 (lambda () (list `empty-env)))
 
