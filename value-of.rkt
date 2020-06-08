@@ -90,7 +90,7 @@
 (define value-of-assign-expr
     (lambda (assignexpr env)
     (cond
-      [(assign-expr? assignexpr)  (extend-env (assign-expr-var assignexpr) (value-of-experession (assign-expr-exp assignexpr) env) env)]
+      [(assign-expr? assignexpr)  (extend-env (assign-expr-var assignexpr) (value-of-experession (assign-expr-exp assignexpr) env) )]
                           
       [else (display "not a assigncom")])))
 
