@@ -156,6 +156,10 @@
 
 
 ;; helpers:
+(define str-cmp-helper
+    (lambda (f a b)
+      ))
+
 (define neg-helper
     (lambda (a)
      [(number? a) (int->expval (- a))]
