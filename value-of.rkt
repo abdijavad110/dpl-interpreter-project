@@ -160,10 +160,14 @@
     (lambda (f a b)
       (cond
        [(and (null? a) (null? b)) #t]
-       [(or (null? a) (null? b)) #f]
-       [(eqv? f `l) (and (< (char->integer (car a)) (char->integer (car b))) (str-cmp-helper `l (cdr a) (cdr b)))]
-       [(eqv? f `g) (and (> (char->integer (car a)) (char->integer (car b))) (str-cmp-helper `g (cdr a) (cdr b)))]
+       [(and (null? a) (eqv? `l f)) #t]
+       [(and (null? a) (eqv? `g f)) #f]
+       [(and (null? b) (eqv? `l f)) #f]
+       [(and (null? b) (eqv? `g f)) #t]
+       [(eqv? f `l) (if (= (char->integer (car a)) (char->integer (car b))) (str-cmp-helper `l (cdr a) (cdr b)) (< (char->integer (car a)) (char->integer (car b))))]
+       [(eqv? f `g) (if (= (char->integer (car a)) (char->integer (car b))) (str-cmp-helper `g (cdr a) (cdr b)) (> (char->integer (car a)) (char->integer (car b))))]
        [else (display "it is not valid operation")])))
+
 
 (define str-cmp
     (lambda (f a b)
