@@ -13,6 +13,7 @@
 (struct bool-expval expval ())
 (struct int-expval expval ())
 (struct string-expval expval ())
+(struct null-expval expval ())
 
 
 (define racket-list->expval
@@ -38,6 +39,9 @@
     (cond
       [(string? s) (string-expval s)]
       [else (display "Error")])))
+
+(define null->expval
+  (lambda () (null-expval '())))
 
 
 (define value-of-command
@@ -92,49 +96,40 @@
 
 
 
-
-
-
-
 ; here we customize comparator functions:
-
 
 (define <
   (lambda (a b)
   (cond
     [(or (null? a) (null? b)) #f]
-    [(and (string? a) (string? b)) (equal? a b)]
+    [(and (string? a) (string? b)) (equal? a b)]  ; fix this
     [(and (list? a) (list? b)) (display "can not compare two lists")]
-    [(list? a)  (if (null? (cdr a)) #t (and (< (car a) b) (< (cdr a) b)))]
-    [(list? b)  (if (null? (cdr b)) #t (and (< a (car b)) (< a (cdr b))))]
+    [(list? a)  (if (null? (cdr a)) #t (and (< (car a) b) (< (cdr a) b)))]  ; check cdr a or a?
+    [(list? b)  (if (null? (cdr b)) #t (and (< a (car b)) (< a (cdr b))))]  ; check cdr a or a?
     [else (old< a b)]
       )))
-
-
-
 
 (define >
   (lambda (a b)
   (cond
     [(or (null? a) (null? b)) #f]
-    [(and (string? a) (string? b)) (equal? a b)]
+    [(and (string? a) (string? b)) (equal? a b)]  ; fix this
     [(and (list? a) (list? b)) (display "can not compare two lists")]
-    [(list? a)  (if (null? (cdr a)) #t (and (> (car a) b) (> (cdr a) b)))]
-    [(list? b)  (if (null? (cdr b)) #t (and (> a (car b)) (> a (cdr b))))]
+    [(list? a)  (if (null? (cdr a)) #t (and (> (car a) b) (> (cdr a) b)))]  ; check cdr a or a?
+    [(list? b)  (if (null? (cdr b)) #t (and (> a (car b)) (> a (cdr b))))]  ; check cdr a or a?
     [else (old> a b)]
       )))
-
-
 
 (define =
   (lambda (a b)
   (cond
     [(and (null? a) (null? b)) #t]
+    [(and (list? a) (list? b)) (if (old= (length a) (length b)) (and (= (car a) (car b)) (= (cdr a) (cdr b))) #f)]
+    [(list? a)  (if (null? (cdr a)) #t (and (= (car a) b) (= (cdr a) b)))]  ; check cdr a or a?
+    [(list? b)  (if (null? (cdr b)) #t (and (= a (car b)) (= a (cdr b))))]  ; check cdr a or a?
     [(or (null? a) (null? b)) #f]
     [(and (string? a) (string? b)) (equal? a b)]
-    [(and (list? a) (list? b)) (and (= (car a) (car b)) (= (cdr a) (cdr b)))]
-    [(list? a)  (if (null? (cdr a)) #t (and (= (car a) b) (= (cdr a) b)))]
-    [(list? b)  (if (null? (cdr b)) #t (and (= a (car b)) (= a (cdr b))))]
+    [(and (boolean? a) (boolean? b)) (not (xor a b))]
     [ (or (and (boolean? a) (number? b)) (and (boolean? b) (number? a))
           (and (string? a) (number? b)) (and (string? b) (number? a))
           (and (string? a) (boolean? b)) (and (string? b) (boolean? a)))
