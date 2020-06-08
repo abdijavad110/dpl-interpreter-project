@@ -102,7 +102,7 @@
   (lambda (a b)
   (cond
     [(or (null? a) (null? b)) #f]
-    [(and (string? a) (string? b)) (equal? a b)]  ; fix this
+    [(and (string? a) (string? b)) (str-cmp `l a b)]  
     [(and (list? a) (list? b)) (display "can not compare two lists")]
     [(list? a)  (if (null? (cdr a)) (< (car a) b) (and (< (car a) b) (< (cdr a) b)))]
     [(list? b)  (if (null? (cdr b)) (< a (car b)) (and (< a (car b)) (< a (cdr b))))]
@@ -113,7 +113,7 @@
   (lambda (a b)
   (cond
     [(or (null? a) (null? b)) #f]
-    [(and (string? a) (string? b)) (equal? a b)]  ; fix this
+    [(and (string? a) (string? b)) (str-cmp `g a b)] 
     [(and (list? a) (list? b)) (display "can not compare two lists")]
     [(list? a)  (if (null? (cdr a)) (> (car a) b) (and (> (car a) b) (> (cdr a) b)))]
     [(list? b)  (if (null? (cdr b)) (> a (car b)) (and (> a (car b)) (> a (cdr b))))]
@@ -158,7 +158,17 @@
 ;; helpers:
 (define str-cmp-helper
     (lambda (f a b)
-      ))
+      (cond
+       [(and (null? a) (null? b)) #t]
+       [(or (null? a) (null? b)) #f]
+       [(eqv? f `l) (and (< (char->integer (car a)) (char->integer (car b))) (str-cmp-helper `l (cdr a) (cdr b)))]
+       [(eqv? f `g) (and (> (char->integer (car a)) (char->integer (car b))) (str-cmp-helper `g (cdr a) (cdr b)))]
+       [else (display "it is not valid operation")])))
+
+(define str-cmp
+    (lambda (f a b)
+      (str-cmp-helper f (string->list a) (string->list b))))
+
 
 (define neg-helper
     (lambda (a)
