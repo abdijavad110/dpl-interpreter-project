@@ -137,6 +137,23 @@
     [else (old= a b)]
       )))
 
+(define !=
+  (lambda (a b)
+  (cond
+    [(and (null? a) (null? b)) #f]
+    [(and (string? a) (string? b)) (equal? a b)]
+    [(and (boolean? a) (boolean? b)) (xor a b)]
+    [(and (list? a) (list? b)) (if (old= (length a) (length b)) #t (and (!= (car a) (car b)) (!= (cdr a) (cdr b))))]
+    [(list? a)  (if (null? (cdr a)) #f (or (!= (car a) b) (!= (cdr a) b)))]  ; check cdr a or a?
+    [(list? b)  (if (null? (cdr b)) #f (or (!= a (car b)) (!= a (cdr b))))]  ; check cdr a or a?
+    [(or (null? a) (null? b)) #f]
+    [ (or (and (boolean? a) (number? b)) (and (boolean? b) (number? a))
+          (and (string? a) (number? b)) (and (string? b) (number? a))
+          (and (string? a) (boolean? b)) (and (string? b) (boolean? a)))
+      #t]
+    [else (not (old= a b))]
+      )))
+
 
 
 
