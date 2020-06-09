@@ -46,7 +46,7 @@
 
 (define value-of-command
   (lambda (com env)
-    (display env)
+    ;(display env)
     (cond
       [(unitcom-expr? com) (display (unitcom-expr-ucom com)) (value-of-unitcom (unitcom-expr-ucom com) env)]
       [(multi-command-expr? com) (begin
@@ -54,7 +54,7 @@
                                (value-of-command (multi-command-expr-ucom com) env))])))
 
 (define value-of-unitcom
-  (lambda (ucom env)
+  (lambda (ucom x)
     (cond
     [(whilecom-expr? ucom) (value-of-while-expr (whilecom-expr-whileexpr ucom) env)]
     [(ifcom-expr? ucom) (value-of-if-expr (ifcom-expr-ifexpr ucom) env)]
@@ -62,7 +62,7 @@
     [(returncom-expr? ucom) (begin (define a (value-of-return-expr (returncom-expr-returnexpr ucom) env)) (display (expval-value a)))])))
 
 (define value-of-while-expr
-  (lambda (whileexpr env)
+  (lambda (whileexpr x)
     (cond
       [(while-expr? whileexpr)  (if (expval-value 
                                  (value-of-expression (while-expr-exp whileexpr)  env))
@@ -73,7 +73,7 @@
       [else (display "not a whilecom")])))     
 
 (define value-of-if-expr
-  (lambda (ifexpr env)
+  (lambda (ifexpr x)
     (cond
       [(if-expr? ifexpr)  (if (expval-value 
                                  (value-of-expression (if-expr-exp1 ifexpr) env))
@@ -83,7 +83,7 @@
       [else (display "not a ifcom")])))
 
 (define value-of-assign-expr
-    (lambda (assignexpr env)
+    (lambda (assignexpr x)
       (cond
         [(assign-expr? assignexpr)  (extend-env (assign-expr-var assignexpr) (value-of-expression (assign-expr-exp assignexpr) env))]                  
         [else (display "not a assigncom")])))
@@ -190,24 +190,23 @@
       [else (display "invalid arguments for operator")])))
 
 (define reference-helper
-    (lambda (l idx)(
-      (display idx)
-      (if (null? (cdr l)) (list-ref l (car idx)) (list-ref (reverse (cdr (reverse idx))) (car (reverse idx))))))) ; check this line
+    (lambda (l idx)
+      (if (null? (cdr idx)) (list-ref l (expval-value (car idx))) (reference-helper (list-ref l (expval-value (car idx))) (cdr idx)))));(list-ref (reverse (cdr (reverse idx))) (car (reverse idx))))))) ; check this line
 
 
 
 (define value-of-return-expr
-  (lambda (r env)
+  (lambda (r x)
   (value-of-expression (return-expr-exp r) env)))
 
 (define value-of-expression
-  (lambda (e env)
+  (lambda (e x)
     (cond
       [(aexp-expr? e) (value-of-aexpression (expression-a1 e) env)]
       [(greater?-expr? e) (bool->expval (>
                                          (expval-value (value-of-aexpression (expression-a1 e) env))
                                          (expval-value (value-of-aexpression (greater?-expr-a2 e) env))))]
-      [(smaller?-expr? e) (display (value-of-aexpression (expression-a1 e) env)) (bool->expval (<
+      [(smaller?-expr? e) (bool->expval (<
                                          (expval-value (value-of-aexpression (expression-a1 e) env))
                                          (expval-value (value-of-aexpression (smaller?-expr-a2 e) env))))]
       [(equal?-expr? e) (bool->expval (=
@@ -218,7 +217,7 @@
                                          (expval-value (value-of-aexpression (not-equal?-expr-a2 e) env))))])))
 
 (define value-of-aexpression
-  (lambda (a env)
+  (lambda (a x)
   (cond
     [(bexp-expr? a) (value-of-bexpression (aexpression-b1 a) env)]
     [(minus-expr? a) (operator-helper -
@@ -229,7 +228,7 @@
                         (expval-value (value-of-aexpression (plus-expr-a1 a) env)))])))
 
 (define value-of-bexpression
-  (lambda (b env)
+  (lambda (b x)
   (cond
     [(cexp-expr? b) (value-of-cexpression (bexpression-c1 b) env)]
     [(mult-expr? b) (operator-helper *
@@ -240,7 +239,7 @@
                                    (expval-value (value-of-bexpression (divide-expr-b1 b) env)))])))
 
 (define value-of-cexpression
-  (lambda (c env)
+  (lambda (c x)
     (cond
       [(neg-expr? c) (neg-helper (expval-value (value-of-cexpression (neg-expr-c1 c) env)))]
       [(par-expr? c) (value-of-expression (par-expr-c1 c) env)]
@@ -250,29 +249,31 @@
       [(var-expr? c) (apply-env (var-expr-var c) env)]
       [(string-expr? c) (string->expval (string-expr-string-val c))]
       [(list-expr? c) (value-of-our-list (list-expr-l c) env)]
-      [(listmem-expr? c) (reference-helper (apply-env (listmem-expr-var c) env) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
+      [(listmem-expr? c) (reference-helper (expval-value (apply-env (listmem-expr-var c) env)) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
 
 (define value-of-listValues
-  (lambda (lv env)
+  (lambda (lv x)
     (cond
       [(val-exp-expr? lv) (list (value-of-expression (listValues-exp1 lv) env))]
       [(extended-listValues-expr? lv) (cons (value-of-expression (listValues-exp1 lv) env) (value-of-listValues (extended-listValues-expr-lv lv) env))])))
 
 (define value-of-our-list
-  (lambda (l env)
+  (lambda (l x)
     (cond
       [(listValues-expr? l) (racket-list->expval (value-of-listValues (listValues-expr-lv l) env))]
       [(empty-list-expr? l) (racket-list->expval '())])))
 
 (define value-of-listmem
-  (lambda (lm env)
+  (lambda (lm x)
     (cond
       [(idx-expr? lm) (racket-list->expval (list (value-of-expression (listmem-exp1 lm) env)))]
       [(multi-idx-expr? lm) (racket-list->expval (cons (value-of-expression (listmem-exp1 lm) env) (value-of-listmem (multi-idx-expr-lm lm) env)))])))
 
 ;test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this our-lexer (open-input-string "a = 2; while a < 4 do a = a + 1; b = 3 end; return a")));"x = [1, 2, 3, 4, 5]; if x[4] == 3 then a = 6 else a = [17, 1, 2] endif; while a == 6 do b = b - 1; a = 7 end; return a")))
+(define my-lexer (lex-this our-lexer (open-input-string "x = [1, 2, 3, 4, 5]; return x[0]; if x[4] == 3 then a = [6] else a = [17, 10, 2] endif; while a[1] > 1 do b = a[0]-1; a=[b, a[1]-1, 10, 2] end; return b")))
+;)))
+;"a = 2; while a < 4 do a = a + 1; b = 3 end; return a"
 ;(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)
 ;(define env (empty-env))
 (let ((parser-res (our-parser my-lexer))) (value-of-command parser-res env)) ;(parse-object-to-list parser-res))
