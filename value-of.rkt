@@ -1,6 +1,5 @@
 #lang racket
 
-
 (require "lexer.rkt")
 (require "parser.rkt")
 (require "env.rkt")
@@ -21,7 +20,7 @@
   (lambda (l)
     (cond
       [(list? l) (our-list-expval l)]
-      [else (display "Error")])))
+      [else (display l) (display "Error")])))
 
 (define bool->expval
   (lambda (b)
@@ -47,11 +46,12 @@
 
 (define value-of-command
   (lambda (com env)
+    (display env)
     (cond
-      [(unitcom-expr? com) (value-of-unitcom (unitcom-expr-ucom com) env)]
+      [(unitcom-expr? com) (display (unitcom-expr-ucom com)) (value-of-unitcom (unitcom-expr-ucom com) env)]
       [(multi-command-expr? com) (begin
                                (value-of-command (multi-command-expr-mcom com) env)
-                               (value-of-unitcom (multi-command-expr-ucom com) env))])))
+                               (value-of-command (multi-command-expr-ucom com) env))])))
 
 (define value-of-unitcom
   (lambda (ucom env)
@@ -59,7 +59,7 @@
     [(whilecom-expr? ucom) (value-of-while-expr (whilecom-expr-whileexpr ucom) env)]
     [(ifcom-expr? ucom) (value-of-if-expr (ifcom-expr-ifexpr ucom) env)]
     [(assigncom-expr? ucom) (value-of-assign-expr (assigncom-expr-assignexpr ucom) env)]
-    [(returncom-expr? ucom) (begin (value-of-return-expr (returncom-expr-returnexpr ucom) env) (exit))])))
+    [(returncom-expr? ucom) (begin (define a (value-of-return-expr (returncom-expr-returnexpr ucom) env)) (display (expval-value a)))])))
 
 (define value-of-while-expr
   (lambda (whileexpr env)
@@ -70,11 +70,7 @@
                                        (value-of-while-expr whileexpr env))
                                     `())
                                     ]
-      [else (display "not a whilecom")])))
-
-
-
-     
+      [else (display "not a whilecom")])))     
 
 (define value-of-if-expr
   (lambda (ifexpr env)
@@ -86,12 +82,10 @@
                                     ]
       [else (display "not a ifcom")])))
 
-
-
 (define value-of-assign-expr
     (lambda (assignexpr env)
       (cond
-        [(assign-expr? assignexpr)  (extend-env (assign-expr-var assignexpr) (value-of-expression (assign-expr-exp assignexpr) env) )]                  
+        [(assign-expr? assignexpr)  (extend-env (assign-expr-var assignexpr) (value-of-expression (assign-expr-exp assignexpr) env))]                  
         [else (display "not a assigncom")])))
 
 
@@ -196,8 +190,9 @@
       [else (display "invalid arguments for operator")])))
 
 (define reference-helper
-    (lambda (l idx)
-     (if (null? (cdr l)) (list-ref l (car idx)) (list-ref (reverse (cdr (reverse idx))) (car (reverse idx)))))) ; check this line
+    (lambda (l idx)(
+      (display idx)
+      (if (null? (cdr l)) (list-ref l (car idx)) (list-ref (reverse (cdr (reverse idx))) (car (reverse idx))))))) ; check this line
 
 
 
@@ -212,7 +207,7 @@
       [(greater?-expr? e) (bool->expval (>
                                          (expval-value (value-of-aexpression (expression-a1 e) env))
                                          (expval-value (value-of-aexpression (greater?-expr-a2 e) env))))]
-      [(smaller?-expr? e) (bool->expval (<
+      [(smaller?-expr? e) (display (value-of-aexpression (expression-a1 e) env)) (bool->expval (<
                                          (expval-value (value-of-aexpression (expression-a1 e) env))
                                          (expval-value (value-of-aexpression (smaller?-expr-a2 e) env))))]
       [(equal?-expr? e) (bool->expval (=
@@ -252,16 +247,16 @@
       [(posnum-expr? c) (int->expval (posnum-expr-posnumber c))]
       [(null-expr? c) (null->expval)]
       [(bool-expr? c) (bool->expval (bool-expr-val c))]
-      [(var-expr? c) (apply-env env (var-expr-var c))]
+      [(var-expr? c) (apply-env (var-expr-var c) env)]
       [(string-expr? c) (string->expval (string-expr-string-val c))]
       [(list-expr? c) (value-of-our-list (list-expr-l c) env)]
-      [(listmem-expr? c) (reference-helper (apply-env env (listmem-expr-var c)) (expval-value (value-of-listmem listmem-expr-lm)))])))
+      [(listmem-expr? c) (reference-helper (apply-env (listmem-expr-var c) env) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
 
 (define value-of-listValues
   (lambda (lv env)
     (cond
       [(val-exp-expr? lv) (list (value-of-expression (listValues-exp1 lv) env))]
-      [(extended-listValues-expr? lv) (racket-list->expval (cons (value-of-expression (listValues-exp1 lv) env) (value-of-listValues (extended-listValues-expr-lv lv) env)))])))
+      [(extended-listValues-expr? lv) (cons (value-of-expression (listValues-exp1 lv) env) (value-of-listValues (extended-listValues-expr-lv lv) env))])))
 
 (define value-of-our-list
   (lambda (l env)
@@ -272,11 +267,13 @@
 (define value-of-listmem
   (lambda (lm env)
     (cond
-      [(idx-expr? lm) (list (value-of-expression (listmem-exp1 lm) env))]
-      [(multi-idx-expr? lm) (cons (value-of-expression (listmem-exp1 lm) env) (value-of-listmem (multi-idx-expr-lm lm) env))])))
+      [(idx-expr? lm) (racket-list->expval (list (value-of-expression (listmem-exp1 lm) env)))]
+      [(multi-idx-expr? lm) (racket-list->expval (cons (value-of-expression (listmem-exp1 lm) env) (value-of-listmem (multi-idx-expr-lm lm) env)))])))
 
 ;test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this our-lexer (open-input-string "if x[4] == 3 then a = 6 else a = [17, 1, 2] endif; while x == 4 do b = b - 1; a = 7 end")))
+(define my-lexer (lex-this our-lexer (open-input-string "a = 2; while a < 4 do a = a + 1; b = 3 end; return a")));"x = [1, 2, 3, 4, 5]; if x[4] == 3 then a = 6 else a = [17, 1, 2] endif; while a == 6 do b = b - 1; a = 7 end; return a")))
 ;(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)
-(let ((parser-res (our-parser my-lexer))) (value-of-command parser-res (empty-env))) ;(parse-object-to-list parser-res))
+;(define env (empty-env))
+(let ((parser-res (our-parser my-lexer))) (value-of-command parser-res env)) ;(parse-object-to-list parser-res))
+;(cdr (list 1))
