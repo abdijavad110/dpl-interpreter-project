@@ -7,14 +7,12 @@
 (require (except-in racket < > =)
          (rename-in racket [< old<] [> old>] [= old=] ))
 
-
 (struct expval (value))
 (struct our-list-expval expval ())
 (struct bool-expval expval ())
 (struct int-expval expval ())
 (struct string-expval expval ())
 (struct null-expval expval ())
-
 
 (define racket-list->expval
   (lambda (l)
@@ -43,7 +41,7 @@
 (define null->expval
   (lambda () (null-expval '())))
 
-
+;########################################################################################################################################################################################################################################################################
 (define value-of-command
   (lambda (com env)
     ;(display env)
@@ -89,9 +87,8 @@
         [(assign-expr? assignexpr)  (extend-env (assign-expr-var assignexpr) (value-of-expression (assign-expr-exp assignexpr) env))]                  
         [else (display "not a assigncom")])))
 
-
+;########################################################################################################################################################################################################################################
 ; here we customize comparator functions:
-
 (define <
   (lambda (a b)
     (begin
@@ -160,7 +157,7 @@
       [else (not (old= a b))]
       ))))
 
-
+;###############################################################################################################################################################################################################################
 ;; helpers:
 (define str-cmp-helper
     (lambda (f a b)
@@ -174,14 +171,12 @@
        [(eqv? f `g) (if (= (char->integer (car a)) (char->integer (car b))) (str-cmp-helper `g (cdr a) (cdr b)) (> (char->integer (car a)) (char->integer (car b))))]
        [else (display "it is not valid operation")])))
 
-
 (define str-cmp
     (lambda (f a b)
       (begin
         (cond [(expval? a) (set! a (expval-value a))])
         (cond [(expval? b) (set! b (expval-value b))])
         (str-cmp-helper f (string->list a) (string->list b)))))
-
 
 (define neg-helper
     (lambda (a)
@@ -218,8 +213,7 @@
     (lambda (l idx)
       (if (null? (cdr idx)) (list-ref l (expval-value (car idx))) (reference-helper (list-ref l (expval-value (car idx))) (cdr idx)))));(list-ref (reverse (cdr (reverse idx))) (car (reverse idx))))))) ; check this line
 
-
-
+;################################################################################################################################################################################################################################
 (define value-of-return-expr
   (lambda (r x)
   (value-of-expression (return-expr-exp r) env)))
@@ -293,6 +287,7 @@
     (cond
       [(idx-expr? lm) (racket-list->expval (list (value-of-expression (listmem-exp1 lm) env)))]
       [(multi-idx-expr? lm) (racket-list->expval (cons (value-of-expression (listmem-exp1 lm) env) (value-of-listmem (multi-idx-expr-lm lm) env)))])))
+;########################################################################################################################################################################################################################
 
 (define make-return-value
   (lambda (x)
@@ -303,6 +298,10 @@
       [(list? x) (if (null? x) '() (cons (make-return-value (car x)) (make-return-value (cdr x))))]
       [else x]))))
       ;TODO NULL and STRING
+;########################################################################################################################################################################################################################
+
+
+
 
 ;test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
