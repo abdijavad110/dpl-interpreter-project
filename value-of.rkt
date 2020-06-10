@@ -162,7 +162,7 @@
 (define str-cmp-helper
     (lambda (f a b)
       (cond
-       [(and (null? a) (null? b)) #t]
+       [(and (null? a) (null? b)) #f]
        [(and (null? a) (eqv? `l f)) #t]
        [(and (null? a) (eqv? `g f)) #f]
        [(and (null? b) (eqv? `l f)) #f]
@@ -297,7 +297,7 @@
     (cond
       [(list? x) (if (null? x) '() (cons (make-return-value (car x)) (make-return-value (cdr x))))]
       [else x]))))
-      ;TODO NULL and STRING
+      ;TODO NULL
 ;########################################################################################################################################################################################################################
 
 

@@ -31,8 +31,8 @@
     (:+ (char-range #\0 #\9))
     (token-POS (string->number lexeme)))
    (
-    (:: #\" (complement #\") #\")
-    (token-STRING lexeme))
+    (:: #\" (complement (:: any-string "\"" any-string)) #\")
+    (token-STRING (string-trim lexeme "\"")))
    ("," (token-COMMA))
    (";" (token-SEMICOL))
    ("=" (token-=))
