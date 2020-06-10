@@ -132,11 +132,6 @@
       [(or (null? a) (null? b)) #f]
       [(and (string? a) (string? b)) (equal? a b)]
       [(and (boolean? a) (boolean? b)) (not (xor a b))]
-;      [ (or (and (boolean? a) (number? b)) (and (boolean? b) (number? a))
-;            (and (string? a) (number? b)) (and (string? b) (number? a))
-;            (and (string? a) (boolean? b)) (and (string? b) (boolean? a)))
-;        #f]
-;      [else (old= a b)]
       [(and (number? a) (number? b)) (old= a b)]
       [else #f]
       )))) 
@@ -154,11 +149,6 @@
       [(list? a)  (if (null? (cdr a)) (!= (car a) b) (or (!= (car a) b) (!= (cdr a) b)))]
       [(list? b)  (if (null? (cdr b)) (!= a (car b)) (or (!= a (car b)) (!= a (cdr b))))]
       [(or (null? a) (null? b)) #f]
-;      [ (or (and (boolean? a) (number? b)) (and (boolean? b) (number? a))
-;            (and (string? a) (number? b)) (and (string? b) (number? a))
-;            (and (string? a) (boolean? b)) (and (string? b) (boolean? a)))
-;        #t]
-;      [else (not (old= a b))]
       [(and (number? a) (number? b)) (not (old= a b))]
       [else #t]
       ))))
@@ -300,11 +290,12 @@
   (lambda (x)
     (begin
     (cond
-      [(expval? x) (set! x (expval-value x))])
+      [(and (expval? x) (not (null-expval? x))) (set! x (expval-value x))])
     (cond
+      [(null-expval? x) 'null]
+      [(boolean? x) (if (equal? #t x) 'true 'false)]
       [(list? x) (if (null? x) '() (cons (make-return-value (car x)) (make-return-value (cdr x))))]
       [else x]))))
-      ;TODO NULL
 ;########################################################################################################################################################################################################################
 
 
