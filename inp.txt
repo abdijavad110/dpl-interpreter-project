@@ -1,9 +1,4 @@
-x = "ahmad";
-y = "ahmabi";
-return "ahmaai" > 1;
-if x != y then a = 4*[6, 10, 2]/2 else a = [17, 10, 2] endif;
-while a[1] > 1 do b = a[0]-1; a=[b, a[1]-1, 10, 2] end;
-return b
+return 2
 
 
 

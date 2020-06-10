@@ -58,7 +58,7 @@
     [(whilecom-expr? ucom) (value-of-while-expr (whilecom-expr-whileexpr ucom) env)]
     [(ifcom-expr? ucom) (value-of-if-expr (ifcom-expr-ifexpr ucom) env)]
     [(assigncom-expr? ucom) (value-of-assign-expr (assigncom-expr-assignexpr ucom) env)]
-    [(returncom-expr? ucom) (begin (define a (value-of-return-expr (returncom-expr-returnexpr ucom) env)) (set! RETVAL (make-return-value a)) (set! RETURN #t))])))
+    [(returncom-expr? ucom) (begin (define a (value-of-return-expr (returncom-expr-returnexpr ucom) env)) (set! RETVAL (make-return-value a)) (set! RETURN #t) RETVAL)])))
 
 (define value-of-while-expr
   (lambda (whileexpr x)
@@ -100,7 +100,8 @@
       [(and (list? a) (list? b)) (display "can not compare two lists")]
       [(list? a)  (if (null? (cdr a)) (< (car a) b) (and (< (car a) b) (< (cdr a) b)))]
       [(list? b)  (if (null? (cdr b)) (< a (car b)) (and (< a (car b)) (< a (cdr b))))]
-      [else (old< a b)]
+      [(and (number? a) (number? b)) (old< a b)]
+      [else (display "invalid comparison")]
       ))))
 
 (define >
@@ -114,7 +115,8 @@
       [(and (list? a) (list? b)) (display "can not compare two lists")]
       [(list? a)  (if (null? (cdr a)) (> (car a) b) (and (> (car a) b) (> (cdr a) b)))]
       [(list? b)  (if (null? (cdr b)) (> a (car b)) (and (> a (car b)) (> a (cdr b))))]
-      [else (old> a b)]
+      [(and (number? a) (number? b)) (old> a b)]
+      [else (display "invalid comparison")]
       ))))
 
 (define =
@@ -130,11 +132,13 @@
       [(or (null? a) (null? b)) #f]
       [(and (string? a) (string? b)) (equal? a b)]
       [(and (boolean? a) (boolean? b)) (not (xor a b))]
-      [ (or (and (boolean? a) (number? b)) (and (boolean? b) (number? a))
-            (and (string? a) (number? b)) (and (string? b) (number? a))
-            (and (string? a) (boolean? b)) (and (string? b) (boolean? a)))
-        #f]
-      [else (old= a b)]
+;      [ (or (and (boolean? a) (number? b)) (and (boolean? b) (number? a))
+;            (and (string? a) (number? b)) (and (string? b) (number? a))
+;            (and (string? a) (boolean? b)) (and (string? b) (boolean? a)))
+;        #f]
+;      [else (old= a b)]
+      [(and (number? a) (number? b)) (old= a b)]
+      [else #f]
       )))) 
 
 (define !=
@@ -150,11 +154,13 @@
       [(list? a)  (if (null? (cdr a)) (!= (car a) b) (or (!= (car a) b) (!= (cdr a) b)))]
       [(list? b)  (if (null? (cdr b)) (!= a (car b)) (or (!= a (car b)) (!= a (cdr b))))]
       [(or (null? a) (null? b)) #f]
-      [ (or (and (boolean? a) (number? b)) (and (boolean? b) (number? a))
-            (and (string? a) (number? b)) (and (string? b) (number? a))
-            (and (string? a) (boolean? b)) (and (string? b) (boolean? a)))
-        #t]
-      [else (not (old= a b))]
+;      [ (or (and (boolean? a) (number? b)) (and (boolean? b) (number? a))
+;            (and (string? a) (number? b)) (and (string? b) (number? a))
+;            (and (string? a) (boolean? b)) (and (string? b) (boolean? a)))
+;        #t]
+;      [else (not (old= a b))]
+      [(and (number? a) (number? b)) (not (old= a b))]
+      [else #t]
       ))))
 
 ;###############################################################################################################################################################################################################################
