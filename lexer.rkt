@@ -48,6 +48,7 @@
    ("*" (token-*))
    ("-" (token--))
    ("/" (token-/))
+   (any-char (raise-user-error "invalid syntax on" lexeme))
 ))
 
 (define-tokens a (VARIABLE POS STRING operator))
