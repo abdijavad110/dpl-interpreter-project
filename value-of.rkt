@@ -39,7 +39,10 @@
       [else (display "Error")])))
 
 (define null->expval
-  (lambda () (null-expval '())))
+  (lambda () (null-expval 'NULL)))
+
+(define p-null?
+  (lambda (p) (eqv? 'NULL p)))
 
 ;########################################################################################################################################################################################################################################################################
 (define value-of-command
@@ -97,9 +100,9 @@
     (cond
       [(or (null? a) (null? b)) #f]
       [(and (string? a) (string? b)) (str-cmp `l a b)]  
-      [(and (list? a) (list? b)) (display "can not compare two lists")]
-      [(list? a)  (if (null? (cdr a)) (< (car a) b) (and (< (car a) b) (< (cdr a) b)))]
-      [(list? b)  (if (null? (cdr b)) (< a (car b)) (and (< a (car b)) (< a (cdr b))))]
+      [(and (list? a) (list? b)) (error "can not compare two lists")]
+      [(list? a)  (if (null? (cdr a)) (< (expval-value (car a)) b) (and (< (expval-value (car a)) b) (< (cdr a) b)))]
+      [(list? b)  (if (null? (cdr b)) (< a (expval-value (car b))) (and (< a (expval-value (car b))) (< a (cdr b))))]
       [(and (number? a) (number? b)) (old< a b)]
       [else (display "invalid comparison")]
       ))))
@@ -112,9 +115,9 @@
     (cond
       [(or (null? a) (null? b)) #f]
       [(and (string? a) (string? b)) (str-cmp `g a b)] 
-      [(and (list? a) (list? b)) (display "can not compare two lists")]
-      [(list? a)  (if (null? (cdr a)) (> (car a) b) (and (> (car a) b) (> (cdr a) b)))]
-      [(list? b)  (if (null? (cdr b)) (> a (car b)) (and (> a (car b)) (> a (cdr b))))]
+      [(and (list? a) (list? b)) (error  "can not compare two lists")]
+      [(list? a)  (if (null? (cdr a)) (> (expval-value (car a)) b) (and (> (expval-value (car a)) b) (> (cdr a) b)))]
+      [(list? b)  (if (null? (cdr b)) (> a (expval-value (car b))) (and (> a (expval-value (car b))) (> a (cdr b))))]
       [(and (number? a) (number? b)) (old> a b)]
       [else (display "invalid comparison")]
       ))))
@@ -125,8 +128,9 @@
     (cond [(expval? a) (set! a (expval-value a))])
     (cond [(expval? b) (set! b (expval-value b))])
     (cond
+      [(and (p-null? a) (p-null? b)) #t]
       [(and (null? a) (null? b)) #t]
-      [(and (list? a) (list? b)) (if (old= (length a) (length b)) (and (= (car a) (car b)) (= (cdr a) (cdr b))) #f)]
+      [(and (list? a) (list? b)) (if (old= (length a) (length b)) (and (= (expval-value (car a)) (expval-value (car b))) (= (cdr a) (cdr b))) #f)]
       [(list? a)  (if (null? (cdr a)) (= (expval-value (car a)) b) (and (= (expval-value (car a)) b) (= (cdr a) b)))]
       [(list? b)  (if (null? (cdr b)) (= a (expval-value (car b))) (and (= a (expval-value (car b))) (= a (cdr b))))]
       [(or (null? a) (null? b)) #f]
@@ -142,13 +146,14 @@
     (cond [(expval? a) (set! a (expval-value a))])
     (cond [(expval? b) (set! b (expval-value b))])
     (cond
+      [(and (p-null? a) (p-null? b)) #f]
       [(and (null? a) (null? b)) #f]
-      [(and (string? a) (string? b)) (equal? a b)]
+      [(and (string? a) (string? b)) (not (equal? a b))]
       [(and (boolean? a) (boolean? b)) (xor a b)]
-      [(and (list? a) (list? b)) (if (old= (length a) (length b)) #t (and (!= (car a) (car b)) (!= (cdr a) (cdr b))))]
-      [(list? a)  (if (null? (cdr a)) (!= (car a) b) (or (!= (car a) b) (!= (cdr a) b)))]
-      [(list? b)  (if (null? (cdr b)) (!= a (car b)) (or (!= a (car b)) (!= a (cdr b))))]
-      [(or (null? a) (null? b)) #f]
+      [(and (list? a) (list? b)) (if (old= (length a) (length b)) #t (and (!= (expval-value (car a)) (expval-value (car b))) (!= (cdr a) (cdr b))))]
+      [(list? a)  (if (null? (cdr a)) (!= (expval-value (car a)) b) (or (!= (expval-value (car a)) b) (!=  (cdr a) b)))]
+      [(list? b)  (if (null? (cdr b)) (!= a (expval-value (car b))) (or (!= a (expval-value (car b))) (!= a (cdr b))))]
+      [(or (null? a) (null? b)) #t]
       [(and (number? a) (number? b)) (not (old= a b))]
       [else #t]
       ))))
@@ -292,7 +297,6 @@
     (cond
       [(and (expval? x) (not (null-expval? x))) (set! x (expval-value x))])
     (cond
-      [(null-expval? x) 'null]
       [(boolean? x) (if (equal? #t x) 'true 'false)]
       [(list? x) (if (null? x) '() (cons (make-return-value (car x)) (make-return-value (cdr x))))]
       [else x]))))
