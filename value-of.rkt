@@ -304,13 +304,23 @@
 
 
 ;test
-(define lex-this (lambda (lexer input) (lambda () (lexer input))))
-(define my-lexer (lex-this our-lexer (open-input-string "x = [1, 2, 3, 4, 5]; y = [1, 2, 3, 4, 5]; return x+y; if x != y then a = 4*[6, 10, 2]/2 else a = [17, 10, 2] endif; while a[1] > 1 do b = a[0]-1; a=[b, a[1]-1, 10, 2] end; return b")))
+;(define lex-this (lambda (lexer input) (lambda () (lexer input))))
+;(define my-lexer (lex-this our-lexer (open-input-string "x = [1, 2, 3, 4, 5]; y = [1, 2, 3, 4, 5]; return x; if x != y then a = 4*[6, 10, 2]/2 else a = [17, 10, 2] endif; while a[1] > 1 do b = a[0]-1; a=[b, a[1]-1, 10, 2] end; return b")))
 ;)))
 ;"a = 2; while a < 4 do a = a + 1; b = 3 end; return a"
 ;(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)(my-lexer)
 ;(define env (empty-env))
 (define RETURN #f)
 (define RETVAL '())
-(let ((parser-res (our-parser my-lexer))) (value-of-command parser-res env)) ;(parse-object-to-list parser-res))
+;(let ((parser-res (our-parser my-lexer))) (value-of-command parser-res env)) ;(parse-object-to-list parser-res))
 ;(cdr (list 1))
+
+(define evaluate
+  (lambda (file_path)
+    (begin
+      (define lex-this (lambda (lexer input) (lambda () (lexer input))))
+      (define my-lexer (lex-this our-lexer (open-input-file file_path)))
+      (let ((parser-res (our-parser my-lexer))) (value-of-command parser-res env))
+      )))
+
+(evaluate "inp.txt")

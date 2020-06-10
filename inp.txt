@@ -1,0 +1,9 @@
+x = "abcde";
+y = [1, 2, 3, 4, 5];
+return x;
+if x != y then a = 4*[6, 10, 2]/2 else a = [17, 10, 2] endif;
+while a[1] > 1 do b = a[0]-1; a=[b, a[1]-1, 10, 2] end;
+return b
+
+
+
