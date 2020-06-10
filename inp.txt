@@ -1,2 +1,2 @@
-return -1
+return [true, false, [1, 2, false]]]
 

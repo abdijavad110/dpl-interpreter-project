@@ -191,7 +191,7 @@
         (cond
             [(number? a) (int->expval (- a))]
             [(boolean? a) (bool->expval (not a))]
-            [(list? a) (if (null? (cdr a)) (neg-helper (car a)) (cons (neg-helper (car a)) (neg-helper (cdr a))))]
+            [(list? a) (racket-list->expval (if (null? (cdr a)) (list (neg-helper (car a))) (cons (neg-helper (car a)) (expval-value (neg-helper (cdr a))))))]
             [else (display "invalid argument after dash")]
         ))))
 
