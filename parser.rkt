@@ -144,7 +144,9 @@
   (parser
    (start command)
    (end EOF)
-   (error void)
+   (error (lambda (tok-ok? tok-name tok-value) (if tok-ok?
+                                    (raise-user-error "Parse Error: Can't parse" tok-name)
+                                    (raise-user-error "Parse Error: invalid" tok-name))))
    (tokens a b)
    (precs (left - +))
    (debug "input.txt")

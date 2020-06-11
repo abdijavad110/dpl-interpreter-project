@@ -18,25 +18,25 @@
   (lambda (l)
     (cond
       [(list? l) (our-list-expval l)]
-      [else (error l) (error "Error")])))
+      [else (raise-user-error l) (raise-user-error "Error")])))
 
 (define bool->expval
   (lambda (b)
     (cond
       [(boolean? b) (bool-expval b)]
-      [else (error "Error")])))
+      [else (raise-user-error "Error")])))
 
 (define int->expval
   (lambda (i)
     (cond
       [(number? i) (int-expval i)]
-      [else (error "Error")])))
+      [else (raise-user-error "Error")])))
 
 (define string->expval
   (lambda (s)
     (cond
       [(string? s) (string-expval s)]
-      [else (error "Error")])))
+      [else (raise-user-error "Error")])))
 
 (define null->expval
   (lambda () (null-expval 'NULL)))
@@ -72,7 +72,7 @@
                                        (value-of-while-expr whileexpr env))
                                     `())
                                     ]
-      [else (error "not a whilecom")])))     
+      [else (raise-user-error "not a whilecom")])))     
 
 (define value-of-if-expr
   (lambda (ifexpr x)
@@ -82,13 +82,13 @@
                                      (value-of-command (if-expr-com1 ifexpr) env)
                                        (value-of-command (if-expr-com2 ifexpr) env))
                                     ]
-      [else (error "not a ifcom")])))
+      [else (raise-user-error "not a ifcom")])))
 
 (define value-of-assign-expr
     (lambda (assignexpr x)
       (cond
         [(assign-expr? assignexpr)  (extend-env (assign-expr-var assignexpr) (value-of-expression (assign-expr-exp assignexpr) env))]                  
-        [else (error "not a assigncom")])))
+        [else (raise-user-error "not a assigncom")])))
 
 ;########################################################################################################################################################################################################################################
 ; here we customize comparator functions:
@@ -100,11 +100,11 @@
     (cond
       [(or (null? a) (null? b)) #f]
       [(and (string? a) (string? b)) (str-cmp `l a b)]  
-      [(and (list? a) (list? b)) (error "can not compare two lists")]
+      [(and (list? a) (list? b)) (raise-user-error "can not compare two lists")]
       [(list? a)  (if (null? (cdr a)) (< (expval-value (car a)) b) (and (< (expval-value (car a)) b) (< (cdr a) b)))]
       [(list? b)  (if (null? (cdr b)) (< a (expval-value (car b))) (and (< a (expval-value (car b))) (< a (cdr b))))]
       [(and (number? a) (number? b)) (old< a b)]
-      [else (error "invalid comparison")]
+      [else (raise-user-error "invalid comparison")]
       ))))
 
 (define >
@@ -115,11 +115,11 @@
     (cond
       [(or (null? a) (null? b)) #f]
       [(and (string? a) (string? b)) (str-cmp `g a b)] 
-      [(and (list? a) (list? b)) (error  "can not compare two lists")]
+      [(and (list? a) (list? b)) (raise-user-error  "can not compare two lists")]
       [(list? a)  (if (null? (cdr a)) (> (expval-value (car a)) b) (and (> (expval-value (car a)) b) (> (cdr a) b)))]
       [(list? b)  (if (null? (cdr b)) (> a (expval-value (car b))) (and (> a (expval-value (car b))) (> a (cdr b))))]
       [(and (number? a) (number? b)) (old> a b)]
-      [else (error "invalid comparison")]
+      [else (raise-user-error "invalid comparison")]
       ))))
 
 (define =
@@ -170,7 +170,7 @@
        [(and (null? b) (eqv? `g f)) #t]
        [(eqv? f `l) (if (= (char->integer (car a)) (char->integer (car b))) (str-cmp-helper `l (cdr a) (cdr b)) (< (char->integer (car a)) (char->integer (car b))))]
        [(eqv? f `g) (if (= (char->integer (car a)) (char->integer (car b))) (str-cmp-helper `g (cdr a) (cdr b)) (> (char->integer (car a)) (char->integer (car b))))]
-       [else (error "it is not valid operation")])))
+       [else (raise-user-error "it is not valid operation")])))
 
 (define str-cmp
     (lambda (f a b)
@@ -187,7 +187,7 @@
             [(number? a) (int->expval (- a))]
             [(boolean? a) (bool->expval (not a))]
             [(list? a) (racket-list->expval (if (null? (cdr a)) (list (neg-helper (car a))) (cons (neg-helper (car a)) (expval-value (neg-helper (cdr a))))))]
-            [else (error "invalid argument after dash")]
+            [else (raise-user-error "invalid argument after dash")]
         ))))
 
 (define operator-helper
@@ -202,14 +202,14 @@
         [(and (boolean? a) (boolean? b)) (cond
                                            [(equal? f +) (bool->expval (or a b))]
                                            [(equal? f *) (bool->expval (and a b))]
-                                           [else (error "invalid operation between booleans")])]
+                                           [else (raise-user-error "invalid operation between booleans")])]
         [(and (string? a) (string? b) (equal? f +)) (string->expval (string-append a b))]
         [(and (list? a) (list? b)) (our-list-expval (append a b))]
         [(list? a)  (if (null? (cdr a)) (our-list-expval (list (operator-helper f (car a) b))) (our-list-expval (cons (operator-helper f (car a) b) (let ([res (operator-helper f (cdr a) b)])
                                                                                                                                                       (if (expval? res) (expval-value res) (res))))))]
         [(list? b)  (if (null? (cdr b)) (our-list-expval (list (operator-helper f a (car b)))) (our-list-expval (cons (operator-helper f a (car b)) (let ([res (operator-helper f a (cdr b))])
                                                                                                                                                       (if (expval? res) (expval-value res) (res))))))]
-        [else (error "invalid arguments for operator")]))))
+        [else (raise-user-error "invalid arguments for operator")]))))
 
 (define reference-helper
     (lambda (l idx)

@@ -1,5 +1,5 @@
-0	g53158	=	(g53159)
-1	g53159	=	(command EOF)
+0	g2596	=	(g2597)
+1	g2597	=	(command EOF)
 2	command	=	(unitcom)
 3	command	=	(command SEMICOL unitcom)
 4	unitcom	=	(whilecom)
@@ -38,7 +38,7 @@
 37	listmem	=	(LBRACKET exp RBRACKET)
 38	listmem	=	(LBRACKET exp RBRACKET listmem)
 State 0
-	g53158 -> . g53159 
+	g2596 -> . g2597 
 
 	unitcom					goto	3
 	return					goto	7
@@ -47,17 +47,17 @@ State 0
 	ifcom					goto	5
 	IF					shift	10
 	WHILE					shift	9
-	g53159					goto	1
+	g2597					goto	1
 	VARIABLE					shift	8
 	assign					goto	6
 	RETURN					shift	11
 
 State 1
-	g53158 -> g53159 . 
+	g2596 -> g2597 . 
 
 
 State 2
-	g53159 -> command . EOF 
+	g2597 -> command . EOF 
 	command -> command . SEMICOL unitcom 
 
 	EOF					accept	
@@ -168,7 +168,7 @@ State 11
 	-					shift	23
 
 State 12
-	g53159 -> command EOF . 
+	g2597 -> command EOF . 
 
 
 State 13
