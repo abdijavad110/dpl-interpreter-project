@@ -46,8 +46,8 @@
 
 ;########################################################################################################################################################################################################################################################################
 (define value-of-command
-  (lambda (com env)
-    ;(error env)
+  (lambda (com x)
+    (display env)
     (cond
       [RETURN RETVAL]
       [(unitcom-expr? com) (value-of-unitcom (unitcom-expr-ucom com) env)] ;(error (unitcom-expr-ucom com)) 
@@ -213,6 +213,7 @@
 
 (define reference-helper
     (lambda (l idx)
+      (display (expval-value (car idx)))
       (if (null? (cdr idx)) (list-ref l (expval-value (car idx))) (reference-helper (list-ref l (expval-value (car idx))) (cdr idx)))));(list-ref (reverse (cdr (reverse idx))) (car (reverse idx))))))) ; check this line
 
 ;################################################################################################################################################################################################################################
@@ -270,7 +271,7 @@
       [(var-expr? c) (apply-env (var-expr-var c) env)]
       [(string-expr? c) (string->expval (string-expr-string-val c))]
       [(list-expr? c) (value-of-our-list (list-expr-l c) env)]
-      [(listmem-expr? c) (reference-helper (expval-value (apply-env (listmem-expr-var c) env)) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
+      [(listmem-expr? c) (reference-helper (expval-value (apply-env (listmem-expr-var c) env)) (display (value-of-listmem (listmem-expr-lm c) env)) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
 
 (define value-of-listValues
   (lambda (lv x)
@@ -288,7 +289,9 @@
   (lambda (lm x)
     (cond
       [(idx-expr? lm) (racket-list->expval (list (value-of-expression (listmem-exp1 lm) env)))]
-      [(multi-idx-expr? lm) (racket-list->expval (cons (value-of-expression (listmem-exp1 lm) env) (value-of-listmem (multi-idx-expr-lm lm) env)))])))
+      [(multi-idx-expr? lm) (racket-list->expval (cons (value-of-expression (listmem-exp1 lm) env) (let ([tmp (value-of-listmem (multi-idx-expr-lm lm) env)]) (if (expval? tmp)
+                                                                                                                                                                  (expval-value tmp)
+                                                                                                                                                                  (tmp)))))])))
 ;########################################################################################################################################################################################################################
 
 (define make-return-value
