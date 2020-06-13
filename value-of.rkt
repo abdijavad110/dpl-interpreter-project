@@ -47,7 +47,7 @@
 ;########################################################################################################################################################################################################################################################################
 (define value-of-command
   (lambda (com x)
-    (display env)
+    ;(display env)
     (cond
       [RETURN RETVAL]
       [(unitcom-expr? com) (value-of-unitcom (unitcom-expr-ucom com) env)] ;(error (unitcom-expr-ucom com)) 
@@ -145,12 +145,14 @@
     (begin
     (cond [(expval? a) (set! a (expval-value a))])
     (cond [(expval? b) (set! b (expval-value b))])
+    ;(display a)
+    ;(display b)
     (cond
       [(and (p-null? a) (p-null? b)) #f]
       [(and (null? a) (null? b)) #f]
       [(and (string? a) (string? b)) (not (equal? a b))]
       [(and (boolean? a) (boolean? b)) (xor a b)]
-      [(and (list? a) (list? b)) (if (old= (length a) (length b)) #t (and (!= (expval-value (car a)) (expval-value (car b))) (!= (cdr a) (cdr b))))]
+      [(and (list? a) (list? b)) (if (old= (length a) (length b)) (or (!= (expval-value (car a)) (expval-value (car b))) (!= (cdr a) (cdr b))) #t)]
       [(list? a)  (if (null? (cdr a)) (!= (expval-value (car a)) b) (or (!= (expval-value (car a)) b) (!=  (cdr a) b)))]
       [(list? b)  (if (null? (cdr b)) (!= a (expval-value (car b))) (or (!= a (expval-value (car b))) (!= a (cdr b))))]
       [(or (null? a) (null? b)) #t]
@@ -213,7 +215,8 @@
 
 (define reference-helper
     (lambda (l idx)
-      (display (expval-value (car idx)))
+      (cond
+        [(expval? l) (set! l (expval-value l))])
       (if (null? (cdr idx)) (list-ref l (expval-value (car idx))) (reference-helper (list-ref l (expval-value (car idx))) (cdr idx)))));(list-ref (reverse (cdr (reverse idx))) (car (reverse idx))))))) ; check this line
 
 ;################################################################################################################################################################################################################################
@@ -271,7 +274,7 @@
       [(var-expr? c) (apply-env (var-expr-var c) env)]
       [(string-expr? c) (string->expval (string-expr-string-val c))]
       [(list-expr? c) (value-of-our-list (list-expr-l c) env)]
-      [(listmem-expr? c) (reference-helper (expval-value (apply-env (listmem-expr-var c) env)) (display (value-of-listmem (listmem-expr-lm c) env)) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
+      [(listmem-expr? c) (reference-helper (expval-value (apply-env (listmem-expr-var c) env)) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
 
 (define value-of-listValues
   (lambda (lv x)
@@ -289,9 +292,11 @@
   (lambda (lm x)
     (cond
       [(idx-expr? lm) (racket-list->expval (list (value-of-expression (listmem-exp1 lm) env)))]
-      [(multi-idx-expr? lm) (racket-list->expval (cons (value-of-expression (listmem-exp1 lm) env) (let ([tmp (value-of-listmem (multi-idx-expr-lm lm) env)]) (if (expval? tmp)
-                                                                                                                                                                  (expval-value tmp)
-                                                                                                                                                                  (tmp)))))])))
+      [(multi-idx-expr? lm) (racket-list->expval (cons (value-of-expression (listmem-exp1 lm) env)
+                                                       (let ([tmp (value-of-listmem (multi-idx-expr-lm lm) env)])
+                                                         (cond
+                                                           [(expval? tmp) (expval-value tmp)]
+                                                           [else (tmp)]))))])))
 ;########################################################################################################################################################################################################################
 
 (define make-return-value
