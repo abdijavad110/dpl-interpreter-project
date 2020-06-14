@@ -10,7 +10,7 @@
 (struct expval (value))
 (struct our-list-expval expval ())
 (struct bool-expval expval ())
-(struct int-expval expval ())
+(struct number-expval expval ())
 (struct string-expval expval ())
 (struct null-expval expval ())
 
@@ -26,10 +26,10 @@
       [(boolean? b) (bool-expval b)]
       [else (raise-user-error "Error")])))
 
-(define int->expval
+(define number->expval
   (lambda (i)
     (cond
-      [(number? i) (int-expval i)]
+      [(number? i) (number-expval i)]
       [else (raise-user-error "Error")])))
 
 (define string->expval
@@ -186,7 +186,7 @@
       (begin
         (cond [(expval? a) (set! a (expval-value a))])
         (cond
-            [(number? a) (int->expval (- a))]
+            [(number? a) (number->expval (- a))]
             [(boolean? a) (bool->expval (not a))]
             [(list? a) (racket-list->expval (if (null? (cdr a)) (list (neg-helper (car a))) (cons (neg-helper (car a)) (expval-value (neg-helper (cdr a))))))]
             [else (raise-user-error "invalid argument after dash")]
@@ -200,7 +200,7 @@
         (cond [(expval? a) (set! a (expval-value a))])
         (cond [(expval? b) (set! b (expval-value b))])
       (cond
-        [(and (number? a) (number? b)) (int->expval (f a b))]
+        [(and (number? a) (number? b)) (number->expval (f a b))]
         [(and (boolean? a) (boolean? b)) (cond
                                            [(equal? f +) (bool->expval (or a b))]
                                            [(equal? f *) (bool->expval (and a b))]
@@ -268,7 +268,7 @@
     (cond
       [(neg-expr? c) (neg-helper (expval-value (value-of-cexpression (neg-expr-c1 c) env)))]
       [(par-expr? c) (value-of-expression (par-expr-c1 c) env)]
-      [(posnum-expr? c) (int->expval (posnum-expr-posnumber c))]
+      [(posnum-expr? c) (number->expval (posnum-expr-posnumber c))]
       [(null-expr? c) (null->expval)]
       [(bool-expr? c) (bool->expval (bool-expr-val c))]
       [(var-expr? c) (apply-env (var-expr-var c) env)]
