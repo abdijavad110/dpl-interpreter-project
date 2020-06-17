@@ -1,1 +1,55 @@
-return 1.2 + 2.3 < 10
+a = 0;
+b = [[1, 2], []];
+r = b < a;
+
+a = 1;
+b = [[1, 2], []];
+r = b < a;
+
+a = "aaa";
+b = [["1", "2"], []];
+r = b < a;
+
+a = 0;
+b = [];
+r = b != a;
+
+a = 0;
+b = "asda";
+r = b != a;
+
+a = 0;
+b = null;
+r = b != a;
+
+a = 0;
+b = null;
+r = b == a;
+
+a = null;
+b = null;
+r = b == a;
+
+a = null;
+b = [[null, null], null, [[[[[null]]]]]];
+r = b == a;
+
+a = null;
+b = [[null, null], null, [[[[[null]]]]]];
+r = b != a;
+
+a = [[1, 2], [3, 4, 5], 6];
+r = a;
+
+a = [1, 2, [3]];
+b = 4;
+r = a + b - b / 4;
+
+a = ["abc", "def", ["ghi"]];
+b = "ABC";
+r = a + b;
+
+i = -6;
+while 0 do i = i + 1; i = i+1 end;
+
+return i

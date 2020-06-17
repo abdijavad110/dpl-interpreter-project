@@ -66,21 +66,21 @@
 (define value-of-while-expr
   (lambda (whileexpr x)
     (cond
-      [(while-expr? whileexpr)  (if (expval-value 
-                                 (value-of-expression (while-expr-exp whileexpr)  env))
-                                    (begin (value-of-command (while-expr-com whileexpr) env)
-                                       (value-of-while-expr whileexpr env))
-                                    `())
+      [(while-expr? whileexpr)  (let ([condition (expval-value (value-of-expression (while-expr-exp whileexpr) env))])
+                                        (if (if (number? condition) (not (old= 0 condition)) condition)
+                                            (begin (value-of-command (while-expr-com whileexpr) env)
+                                            (value-of-while-expr whileexpr env))
+                                            `()))
                                     ]
       [else (raise-user-error "not a whilecom")])))     
 
 (define value-of-if-expr
   (lambda (ifexpr x)
     (cond
-      [(if-expr? ifexpr)  (if (expval-value 
-                                 (value-of-expression (if-expr-exp1 ifexpr) env))
+      [(if-expr? ifexpr)  (let ([condition (expval-value (value-of-expression (if-expr-exp1 ifexpr) env))])
+                                (if (if (number? condition) (not (old= 0 condition)) condition)
                                      (value-of-command (if-expr-com1 ifexpr) env)
-                                       (value-of-command (if-expr-com2 ifexpr) env))
+                                       (value-of-command (if-expr-com2 ifexpr) env)))
                                     ]
       [else (raise-user-error "not a ifcom")])))
 
@@ -131,9 +131,9 @@
       [(and (p-null? a) (p-null? b)) #t]
       [(and (null? a) (null? b)) #t]
       [(and (list? a) (list? b)) (if (old= (length a) (length b)) (and (= (expval-value (car a)) (expval-value (car b))) (= (cdr a) (cdr b))) #f)]
+      [(or (null? a) (null? b)) #f]
       [(list? a)  (if (null? (cdr a)) (= (expval-value (car a)) b) (and (= (expval-value (car a)) b) (= (cdr a) b)))]
       [(list? b)  (if (null? (cdr b)) (= a (expval-value (car b))) (and (= a (expval-value (car b))) (= a (cdr b))))]
-      [(or (null? a) (null? b)) #f]
       [(and (string? a) (string? b)) (equal? a b)]
       [(and (boolean? a) (boolean? b)) (not (xor a b))]
       [(and (number? a) (number? b)) (old= a b)]
@@ -153,9 +153,9 @@
       [(and (string? a) (string? b)) (not (equal? a b))]
       [(and (boolean? a) (boolean? b)) (xor a b)]
       [(and (list? a) (list? b)) (if (old= (length a) (length b)) (or (!= (expval-value (car a)) (expval-value (car b))) (!= (cdr a) (cdr b))) #t)]
+      [(or (null? a) (null? b)) #t]
       [(list? a)  (if (null? (cdr a)) (!= (expval-value (car a)) b) (or (!= (expval-value (car a)) b) (!=  (cdr a) b)))]
       [(list? b)  (if (null? (cdr b)) (!= a (expval-value (car b))) (or (!= a (expval-value (car b))) (!= a (cdr b))))]
-      [(or (null? a) (null? b)) #t]
       [(and (number? a) (number? b)) (not (old= a b))]
       [else #t]
       ))))
