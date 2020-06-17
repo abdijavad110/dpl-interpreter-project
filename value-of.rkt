@@ -200,7 +200,7 @@
         (cond [(expval? a) (set! a (expval-value a))])
         (cond [(expval? b) (set! b (expval-value b))])
       (cond
-        [(and (number? a) (number? b)) (number->expval (f a b))]
+        [(and (number? a) (number? b)) (if (and (equal? f /) (old= 0 b)) (raise-user-error "division by zero") (number->expval (f a b)))]
         [(and (boolean? a) (boolean? b)) (cond
                                            [(equal? f +) (bool->expval (or a b))]
                                            [(equal? f *) (bool->expval (and a b))]
