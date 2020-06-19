@@ -1,4 +1,4 @@
-س#lang racket
+#lang racket
 (require parser-tools/lex
          (prefix-in re- parser-tools/lex-sre)
          parser-tools/yacc)
