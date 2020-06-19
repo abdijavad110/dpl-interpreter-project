@@ -1,4 +1,4 @@
-#lang racket
+س#lang racket
 (require parser-tools/lex
          (prefix-in re- parser-tools/lex-sre)
          parser-tools/yacc)
@@ -227,8 +227,8 @@
       [(not-equal?-expr? root-object) (list "not-equal?-expr" (parse-object-to-list (expression-a1 root-object)) (parse-object-to-list (not-equal?-expr-a2 root-object)))]
 
       [(bexp-expr? root-object) (list "bexp-expr" (parse-object-to-list (aexpression-b1 root-object)))]
-      [(minus-expr? root-object) (list "minus-expr" (parse-object-to-list (minus-expr-a1 root-object)))]
-      [(plus-expr? root-object) (list "plus-expr" (parse-object-to-list (plus-expr-a1 root-object)))]
+      [(minus-expr? root-object) (list "minus-expr" (parse-object-to-list (aexpression-b1 root-object)) (parse-object-to-list (minus-expr-a1 root-object)))]
+      [(plus-expr? root-object) (list "plus-expr" (parse-object-to-list (aexpression-b1 root-object)) (parse-object-to-list (plus-expr-a1 root-object)))]
 
       [(cexp-expr? root-object) (list "cexp-expr" (parse-object-to-list (bexpression-c1 root-object)))]
       [(mult-expr? root-object) (list "mult-expr" (parse-object-to-list (bexpression-c1 root-object)) (parse-object-to-list (mult-expr-b1 root-object)))]
