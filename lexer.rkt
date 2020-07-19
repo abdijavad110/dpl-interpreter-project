@@ -10,6 +10,9 @@
 
 (define our-lexer
   (lexer
+   ("func" (token-FUNC))
+   ("{" (token-LBRACE))
+   ("}" (token-RBRACE))
    (whitespace (our-lexer input-port))
    ((eof) (token-EOF))
    ("while" (token-WHILE))
@@ -52,7 +55,8 @@
 ))
 
 (define-tokens a (VARIABLE POS STRING operator))
-(define-empty-tokens b (EOF SEMICOL COMMA = < > == != + - * / LPAR RPAR LBRACKET RBRACKET WHILE DO END IF THEN ELSE ENDIF RETURN NULL TRUE FALSE))
+(define-empty-tokens b (EOF SEMICOL COMMA = < > == != + - * / LPAR RPAR LBRACKET RBRACKET
+    WHILE DO END IF THEN ELSE ENDIF RETURN NULL TRUE FALSE FUNC LBRACE RBRACE))
 
 (define evaluate
     (lambda (path)
@@ -60,7 +64,7 @@
 
 ;test
 (define lex-this (lambda (lexer input) (lambda () (lexer input))))
-;(define my-lexer (lex-this our-lexer (open-input-string "while <>= == != ( ) [ ] a do b + 3; end")))
+;(define my-lexer (lex-this our-lexer (open-input-string "a=func(x) {return x}")))
 ;(let ((parser-res (our-parser my-lexer))) parser-res)
 
 
