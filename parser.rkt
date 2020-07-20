@@ -9,47 +9,24 @@
 (struct unitcom-expr command (ucom))
 (struct multi-command-expr command (mcom ucom))
 
-;(define-datatype command command?
-;  (unitcom-expr (ucom unitcom?))
-;  (multi-command-expr (mcom command?) (ucom unitcom?))
-;  )
-
 (struct unitcom ())
 (struct whilecom-expr unitcom (whileexpr))
 (struct ifcom-expr unitcom (ifexpr))
 (struct assigncom-expr unitcom (assignexpr))
 (struct returncom-expr unitcom (returnexpr))
 
-;(define-datatype unitcom unitcom?
-;  (whilecom-expr (while while-expr?))
-;  (ifcom-expr (if if-expr?))
-;  (assigncom-expr (assign assign-expr?))
-;  (returncom-expr (return return-expr?))
-;  )
-
 (struct while-expr (exp com))
-
-;(define-datatype while while-expr?
-;  (while-expr (exp expression?) (com command?))
-;  )
 
 (struct if-expr (exp1 com1 com2))
 
-;(define-datatype if if-expr?
-;  (if-expr (exp1 expression?) (com1 command?) (com2 command?))
-;  )
-
-(struct assign-expr (var exp))
-
-;(define-datatype assign assign-expr?
-;  (assign-expr (var symbol?) (exp expression?)) ;TODO
-;  )
+;NEW----------------------------------------------------
+(struct assign (var))
+(struct assign-exp-expr assign (exp))
+(struct assign-function-expr assign (f))
+(struct assign-call-expr assign (c))
+;-------------------------------------------------------
 
 (struct return-expr (exp))
-
-;(define-datatype return return-expr?
-;  (return-expr (exp expression?))
-;  )
 
 (struct expression (a1))
 (struct aexp-expr expression ())
@@ -58,35 +35,15 @@
 (struct equal?-expr expression (a2))
 (struct not-equal?-expr expression (a2))
 
-;(define-datatype expression expression?
-;  (aexp-expr (a1 aexpression?))
-;  (greater?-expr (a1 aexpression?) (a2 aexpression?))
-;  (smaller?-expr (a1 aexpression?) (a2 aexpression?))
-;  (equal?-expr (a1 aexpression?) (a2 aexpression?))
-;  (not-equal?-expr (a1 aexpression?) (a2 aexpression?))
-;  )
-
 (struct aexpression (b1))
 (struct bexp-expr aexpression ())
 (struct minus-expr aexpression (a1))
 (struct plus-expr aexpression (a1))
 
-;(define-datatype aexp aexpression?
-;  (bexp-expr (b1 bexpression?))
-;  (minus-expr (b1 bexpression?) (a1 aexpression?))
-;  (plus-expr (b1 bexpression?) (a1 aexpression?))
-;  )
-
 (struct bexpression (c1))
 (struct cexp-expr bexpression ())
 (struct mult-expr bexpression (b1))
 (struct divide-expr bexpression (b1))
-
-;(define-datatype bexp bexpression?
-;  (cexp-expr (c1 cexpression?))
-;  (mult-expr (c1 cexpression?) (b1 bexpression?))
-;  (divide-expr (c1 cexpression?) (b1 bexpression?))
-;  )
 
 (struct cexpression ())
 (struct neg-expr cexpression (c1))
@@ -99,45 +56,31 @@
 (struct list-expr cexpression (l))
 (struct listmem-expr cexpression (var lm))
 
-;(define-datatype cexp cexpression?
-;  (neg-expr (c1 cexpression?))
-;  (par-expr (c1 cexpression?))
-;  (posnum-expr (pnum positive?)) ;TODO
-;  (null-expr)
-;  (bool-expr (b string?)) ;TODO
-;  (var-expr (v symbol?)) ;TODO
-;  (string-expr (s string?))
-;  (list-expr (l list?))
-;  (listmem-expr (v string?) (lm listmem?))
-;  )
-
 (struct our-list ())
 (struct listValues-expr our-list (lv))
 (struct empty-list-expr our-list ())
  
-;(define-datatype list list?
-;  (listValues-expr (lv listValues?))
-;  (empty-list-expr)
-;  )
-
 (struct listValues (exp1))
 (struct val-exp-expr listValues ())
 (struct extended-listValues-expr listValues (lv))
-
-;(define-datatype listValues listValues?
-;  (val-exp-expr (exp expression?))
-;  (extended-listValues-expr (exp expression?) (lv listValues?))
-;  )
 
 (struct listmem (exp1))
 (struct idx-expr listmem ())
 (struct multi-idx-expr listmem (lm))
 
-;(define-datatype listmem listmem?
-;  (idx-expr (exp expression?))
-;  (multi-idx-expr (exp expression?) (lm listmem?))
-;  )
+;NEW---------------------------------------------
+(struct function-expr (vars cmds))
 
+(struct vars (v))
+(struct single-vars-expr vars ())
+(struct multi-vars-expr vars (vs))
+
+(struct call-expr (v args))
+
+(struct args (exp1))
+(struct single-args-expr args ())
+(struct multi-args-expr args (args))
+;------------------------------------------------
 
 
 (define our-parser
@@ -164,7 +107,10 @@
     (ifcom
          ((IF exp THEN command ELSE command ENDIF) (if-expr $2 $4 $6)))
     (assign
-         ((VARIABLE = exp) (assign-expr $1 $3)))
+         ((VARIABLE = exp) (assign-exp-expr $1 $3)) ;NEW
+         ((VARIABLE = function)(assign-function-expr $1 $3)) ;NEW
+         ((VARIABLE = call)(assign-call-expr $1 $3));NEW
+         )
     (return
          ((RETURN exp) (return-expr $2)))
     (exp
@@ -201,7 +147,21 @@
     (listmem
          ((LBRACKET exp RBRACKET) (idx-expr $2))
          ((LBRACKET exp RBRACKET listmem) (multi-idx-expr $2 $4)))
+    
+    ;NEW--------------------------------------------------------------------------
+    (function
+         ((FUNC LPAR vars RPAR LBRACE command RBRACE) (function-expr $3 $6)))
+    (vars
+         ((VARIABLE) (single-vars-expr $1))
+         ((VARIABLE COMMA vars) (multi-vars-expr $1 $3)))
+    (call
+         ((VARIABLE LPAR args RPAR) (call-expr $1 $3)))
+    (args
+         ((exp) (single-args-expr $1))
+         ((exp COMMA args) (multi-args-expr $1 $3)))
+    ;-----------------------------------------------------------------------------
     )))
+
 
 
 (define parse-object-to-list
@@ -217,7 +177,13 @@
 
       [(while-expr? root-object) (list "while-expr" (parse-object-to-list (while-expr-exp root-object)) (parse-object-to-list (while-expr-com root-object)))]
       [(if-expr? root-object) (list "if-expr" (parse-object-to-list (if-expr-exp1 root-object)) (parse-object-to-list (if-expr-com1 root-object)) (parse-object-to-list (if-expr-com2 root-object)))]
-      [(assign-expr? root-object) (list "assign-expr" (parse-object-to-list (assign-expr-var root-object)) (parse-object-to-list (assign-expr-exp root-object)))]
+
+      ;NEW--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      [(assign-exp-expr? root-object) (list "assign-exp-expr" (parse-object-to-list (assign-var root-object)) (parse-object-to-list (assign-exp-expr-exp root-object)))]
+      [(assign-function-expr? root-object) (list "assign-function-expr" (parse-object-to-list (assign-var root-object)) (parse-object-to-list (assign-function-expr-f root-object)))]
+      [(assign-call-expr? root-object) (list "assign-call-expr" (parse-object-to-list (assign-var root-object)) (parse-object-to-list (assign-call-expr-c root-object)))]
+      ;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      
       [(return-expr? root-object) (list "return-expr" (parse-object-to-list (return-expr-exp root-object)))]
       
       [(aexp-expr? root-object) (list "aexp-expr" (parse-object-to-list (expression-a1 root-object)))]
@@ -253,6 +219,23 @@
       [(idx-expr? root-object) (list "idx-expr" (parse-object-to-list (listmem-exp1 root-object)))]
       [(multi-idx-expr? root-object) (list "multi-idx-expr" (parse-object-to-list (listmem-exp1 root-object)) (parse-object-to-list (multi-idx-expr-lm root-object)))]
 
+      ;NEW-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+      [(function-expr? root-object) (list "function-expr" (parse-object-to-list (function-expr-vars root-object)) (parse-object-to-list (function-expr-cmds root-object)))]
+
+      [(single-vars-expr? root-object) (list "single-vars-expr" (parse-object-to-list (vars-v root-object)))]
+      [(multi-vars-expr? root-object) (list "multi-vars-expr" (parse-object-to-list (vars-v root-object)) (parse-object-to-list (multi-vars-expr-vs root-object)))]
+      
+      [(call-expr? root-object) (list "call-expr" (parse-object-to-list (call-expr-v root-object)) (parse-object-to-list (call-expr-args root-object)))]
+      
+      [(single-args-expr? root-object) (list "single-args-expr" (parse-object-to-list (args-exp1 root-object)))]
+      [(multi-args-expr? root-object) (list "multi-args-expr" (parse-object-to-list (args-exp1 root-object)) (parse-object-to-list (multi-args-expr-args root-object)))]
+      ;--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
       [else root-object]
 
       )))
+
+;(define file_path "./inp.txt")
+;(define lex-this (lambda (lexer input) (lambda () (lexer input))))
+;(define my-lexer (lex-this our-lexer (open-input-file file_path)))
+;(let ((parser-res (our-parser my-lexer))) (display (parse-object-to-list parser-res)))
