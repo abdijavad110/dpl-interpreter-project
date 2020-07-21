@@ -8,6 +8,16 @@
   (lambda (var val)
     (set! env (list `extend-env var val env))))
 
+(define extend-saved-env
+  (lambda (var val saved-env)
+    (set! env (list `extend-env var val saved-env))))
+
+(define reset-env-and-return-val
+  (lambda (orig-env res)
+    (begin
+      (set! env orig-env)
+      res)))
+
 (define apply-env
   (lambda (search-var env)
     (cond

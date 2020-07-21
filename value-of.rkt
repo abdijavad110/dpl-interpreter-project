@@ -59,7 +59,7 @@
   (lambda (com x)
     ;(display env)
     (cond
-      [RETURN RETVAL]
+      [RETURN? RETVAL]
       [(unitcom-expr? com) (value-of-unitcom (unitcom-expr-ucom com) env)] ;(error (unitcom-expr-ucom com)) 
       [(multi-command-expr? com) (begin
                                (value-of-command (multi-command-expr-mcom com) env)
@@ -71,7 +71,9 @@
     [(whilecom-expr? ucom) (value-of-while-expr (whilecom-expr-whileexpr ucom) env)]
     [(ifcom-expr? ucom) (value-of-if-expr (ifcom-expr-ifexpr ucom) env)]
     [(assigncom-expr? ucom) (value-of-assign (assigncom-expr-assignexpr ucom) env)]
-    [(returncom-expr? ucom) (begin (define a (value-of-return-expr (returncom-expr-returnexpr ucom) env)) (set! RETVAL (make-return-value a)) (set! RETURN #t) RETVAL)])))
+    [(returncom-expr? ucom) (begin (define a (value-of-return-expr (returncom-expr-returnexpr ucom) env)) (set! RETURN? #t) (set! RETURN-VAL (- RETURN-VAL 1)) (if (old< RETURN-VAL 0)
+                                                                                                                                                 (set! RETVAL (make-return-value a))
+                                                                                                                                                 (set! RETVAL a)) RETVAL)])))
 
 (define value-of-while-expr
   (lambda (whileexpr x)
@@ -99,8 +101,8 @@
     (lambda (ae x)
       (cond
         [(assign-exp-expr? ae)  (extend-env (assign-var ae) (value-of-expression (assign-exp-expr-exp ae) env))]
-        [(assign-function-expr?) (extend-env (assign-var ae) (value-of-func-expr (assign-function-expr-f ae) env))]
-        [(assign-call-expr?) (extend-env (assign-var ae) (value-of-call-expr (assign-call-expr-c ae) env))]
+        [(assign-function-expr? ae) (extend-env (assign-var ae) (value-of-func-expr (assign-function-expr-f ae) env))]
+        [(assign-call-expr? ae) (extend-env (assign-var ae) (value-of-call-expr (assign-call-expr-c ae) env))]
         [else (raise-user-error "not a assigncom")])))
 ;-------------------------------------------------------
 
@@ -311,23 +313,31 @@
 
 ;New----------------------------------------------------
 (define extend-env-args
-  (lambda (vars args saved-env)
+  (lambda (vars args saved-env arg-env)
     (let (
         [var (vars-v vars)]
         [arg (args-exp1 args)])
       (begin
+        (define saved-env-copy saved-env)
         (if (and (multi-vars-expr? vars) (multi-args-expr? args))
-          (set! saved-env (extend-env-args (multi-vars-expr-vs vars) (multi-args-expr-args args) saved-env))
-          (if (or (multi-vars-expr? vars) (multi-args-expr? args)) (raise-user-error "args number doesn't match variables") '()))
-        (extend-env var (value-of-expression arg env) saved-env)))))
+            (begin
+              (extend-env-args (multi-vars-expr-vs vars) (multi-args-expr-args args) saved-env arg-env)
+              (set! saved-env-copy env))
+            (if (or (multi-vars-expr? vars) (multi-args-expr? args)) (raise-user-error "args number doesn't match variables") '()))
+        (extend-saved-env var (value-of-expression arg arg-env) saved-env-copy)))))
 
 (define apply-procedure
-  (lambda (rator args)
+  (lambda (rator args)    
     (let (
-        [vars (procedure-vars rator)]
-        [body (procedure-body rator)]
-        [saved-env (procedure-saved-env rator)])
-      (value-of-command body (extend-env-args vars args saved_env)))))
+        [vars (procedure-vars (expval-value rator))]
+        [body (procedure-body (expval-value rator))]
+        [saved-env (procedure-saved-env (expval-value rator))])
+      (begin
+        ;(display env)
+        (define orig-env env)
+        (let ([res (value-of-command body (extend-env-args vars args saved-env orig-env))])
+          (reset-env-and-return-val orig-env res))))  
+      ))
 
 (define value-of-func-expr
   (lambda (f env) (let (
@@ -340,7 +350,13 @@
     (let (
         [rator (apply-env (call-expr-v c) env)] ; fixme check accessing env
         [args (call-expr-args c)])
-      (apply-procedure rator args))))
+      (begin
+        (set! RETURN-VAL (+ RETURN-VAL 1))
+        (let ([r (apply-procedure rator args)])
+        (begin
+          (set! RETURN? #f)
+          r)))
+      )))
 ;-------------------------------------------------------
 
 ;make return value--------------------------------------
@@ -356,8 +372,8 @@
 ;-------------------------------------------------------
 
 
-
-(define RETURN #f)
+(define RETURN? #f)
+(define RETURN-VAL 0)
 (define RETVAL '())
 
 (define evaluate
