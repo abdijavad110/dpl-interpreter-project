@@ -7,12 +7,22 @@
 (require (except-in racket < > =)
          (rename-in racket [< old<] [> old>] [= old=] ))
 
+;expressed values------------------------
 (struct expval (value))
 (struct our-list-expval expval ())
 (struct bool-expval expval ())
 (struct number-expval expval ())
 (struct string-expval expval ())
 (struct null-expval expval ())
+
+;NEW----------------------------------------------------
+(struct proc-expval expval ())
+(struct procedure (vars body saved-env))
+(define proc->expval
+  (lambda (p) (cond
+    [(procedure? p) (proc-expval p)]
+    [else (raise-user-error p) (raise-user-error "Error")])))
+;-------------------------------------------------------
 
 (define racket-list->expval
   (lambda (l)
@@ -43,8 +53,8 @@
 
 (define p-null?
   (lambda (p) (eqv? 'NULL p)))
+;---------------------------------------
 
-;########################################################################################################################################################################################################################################################################
 (define value-of-command
   (lambda (com x)
     ;(display env)
@@ -60,7 +70,7 @@
     (cond
     [(whilecom-expr? ucom) (value-of-while-expr (whilecom-expr-whileexpr ucom) env)]
     [(ifcom-expr? ucom) (value-of-if-expr (ifcom-expr-ifexpr ucom) env)]
-    [(assigncom-expr? ucom) (value-of-assign-expr (assigncom-expr-assignexpr ucom) env)]
+    [(assigncom-expr? ucom) (value-of-assign (assigncom-expr-assignexpr ucom) env)]
     [(returncom-expr? ucom) (begin (define a (value-of-return-expr (returncom-expr-returnexpr ucom) env)) (set! RETVAL (make-return-value a)) (set! RETURN #t) RETVAL)])))
 
 (define value-of-while-expr
@@ -84,14 +94,17 @@
                                     ]
       [else (raise-user-error "not a ifcom")])))
 
-(define value-of-assign-expr
-    (lambda (assignexpr x)
+;NEW----------------------------------------------------
+(define value-of-assign
+    (lambda (ae x)
       (cond
-        [(assign-expr? assignexpr)  (extend-env (assign-expr-var assignexpr) (value-of-expression (assign-expr-exp assignexpr) env))]                  
+        [(assign-exp-expr? ae)  (extend-env (assign-var ae) (value-of-expression (assign-exp-expr-exp ae) env))]
+        [(assign-function-expr?) (extend-env (assign-var ae) (value-of-func-expr (assign-function-expr-f ae) env))]
+        [(assign-call-expr?) (extend-env (assign-var ae) (value-of-call-expr (assign-call-expr-c ae) env))]
         [else (raise-user-error "not a assigncom")])))
+;-------------------------------------------------------
 
-;########################################################################################################################################################################################################################################
-; here we customize comparator functions:
+;helpers------------------------------------------------
 (define <
   (lambda (a b)
     (begin
@@ -99,7 +112,7 @@
     (cond [(expval? b) (set! b (expval-value b))])
     (cond
       [(or (null? a) (null? b)) #f]
-      [(and (string? a) (string? b)) (str-cmp `l a b)]  
+      [(and (string? a) (string? b)) (str-cmp `l a b)]
       [(and (list? a) (list? b)) (raise-user-error "can not compare two lists")]
       [(list? a)  (if (null? (cdr a)) (< (expval-value (car a)) b) (and (< (expval-value (car a)) b) (< (cdr a) b)))]
       [(list? b)  (if (null? (cdr b)) (< a (expval-value (car b))) (and (< a (expval-value (car b))) (< a (cdr b))))]
@@ -114,7 +127,7 @@
     (cond [(expval? b) (set! b (expval-value b))])
     (cond
       [(or (null? a) (null? b)) #f]
-      [(and (string? a) (string? b)) (str-cmp `g a b)] 
+      [(and (string? a) (string? b)) (str-cmp `g a b)]
       [(and (list? a) (list? b)) (raise-user-error  "can not compare two lists")]
       [(list? a)  (if (null? (cdr a)) (> (expval-value (car a)) b) (and (> (expval-value (car a)) b) (> (cdr a) b)))]
       [(list? b)  (if (null? (cdr b)) (> a (expval-value (car b))) (and (> a (expval-value (car b))) (> a (cdr b))))]
@@ -138,7 +151,7 @@
       [(and (boolean? a) (boolean? b)) (not (xor a b))]
       [(and (number? a) (number? b)) (old= a b)]
       [else #f]
-      )))) 
+      ))))
 
 (define !=
   (lambda (a b)
@@ -160,8 +173,6 @@
       [else #t]
       ))))
 
-;###############################################################################################################################################################################################################################
-;; helpers:
 (define str-cmp-helper
     (lambda (f a b)
       (cond
@@ -218,8 +229,8 @@
       (cond
         [(expval? l) (set! l (expval-value l))])
       (if (null? (cdr idx)) (list-ref l (expval-value (car idx))) (reference-helper (list-ref l (expval-value (car idx))) (cdr idx)))));(list-ref (reverse (cdr (reverse idx))) (car (reverse idx))))))) ; check this line
+;-------------------------------------------------------
 
-;################################################################################################################################################################################################################################
 (define value-of-return-expr
   (lambda (r x)
   (value-of-expression (return-expr-exp r) env)))
@@ -297,8 +308,42 @@
                                                          (cond
                                                            [(expval? tmp) (expval-value tmp)]
                                                            [else (tmp)]))))])))
-;########################################################################################################################################################################################################################
 
+;New----------------------------------------------------
+(define extend-env-args
+  (lambda (vars args saved-env)
+    (let (
+        [var (vars-v vars)]
+        [arg (args-exp1 args)])
+      (begin
+        (if (and (multi-vars-expr? vars) (multi-args-expr? args))
+          (set! saved-env (extend-env-args (multi-vars-expr-vs vars) (multi-args-expr-args args) saved-env))
+          (if (or (multi-vars-expr? vars) (multi-args-expr? args)) (raise-user-error "args number doesn't match variables") '()))
+        (extend-env var (value-of-expression arg env) saved-env)))))
+
+(define apply-procedure
+  (lambda (rator args)
+    (let (
+        [vars (procedure-vars rator)]
+        [body (procedure-body rator)]
+        [saved-env (procedure-saved-env rator)])
+      (value-of-command body (extend-env-args vars args saved_env)))))
+
+(define value-of-func-expr
+  (lambda (f env) (let (
+      [vars (function-expr-vars f)]
+      [body (function-expr-cmds f)])
+    (proc->expval (procedure vars body env)))))
+
+(define value-of-call-expr
+  (lambda (c env)
+    (let (
+        [rator (apply-env (call-expr-v c) env)] ; fixme check accessing env
+        [args (call-expr-args c)])
+      (apply-procedure rator args))))
+;-------------------------------------------------------
+
+;make return value--------------------------------------
 (define make-return-value
   (lambda (x)
     (begin
@@ -308,7 +353,7 @@
       [(boolean? x) (if (equal? #t x) 'true 'false)]
       [(list? x) (if (null? x) '() (cons (make-return-value (car x)) (make-return-value (cdr x))))]
       [else x]))))
-;########################################################################################################################################################################################################################
+;-------------------------------------------------------
 
 
 
