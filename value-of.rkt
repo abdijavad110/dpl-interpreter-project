@@ -240,6 +240,7 @@
 
 (define value-of-expression
   (lambda (e x)
+    ;(display env)
     (cond
       [(aexp-expr? e) (value-of-aexpression (expression-a1 e) env)]
       [(greater?-expr? e) (bool->expval (>
@@ -319,12 +320,20 @@
         [var (vars-v vars)]
         [arg (args-exp1 args)])
       (begin
+        ;(display saved-env)
         (define saved-env-copy saved-env)
         (if (and (multi-vars-expr? vars) (multi-args-expr? args))
             (begin
-              (extend-env-args (multi-vars-expr-vs vars) (multi-args-expr-args args) saved-env arg-env)
+              (extend-env-args (multi-vars-expr-vs vars) (multi-args-expr-args args) saved-env-copy arg-env)
               (set! saved-env-copy env))
+              ;(display saved-env-copy))
             (if (or (multi-vars-expr? vars) (multi-args-expr? args)) (raise-user-error "args number doesn't match variables") '()))
+        ;(display saved-env-copy)
+        ;(display "\n")
+        ;(display arg-env)
+        ;(display (expression-a1 arg))
+        ;(display "###\n")
+        (reset-env-and-return-val arg-env '())
         (extend-saved-env var (value-of-expression arg arg-env) saved-env-copy)))))
 
 (define apply-procedure
