@@ -58,6 +58,7 @@
 (define value-of-command
   (lambda (com x)
     ;(display env)
+    ;(display "###\n")
     (cond
       [RETURN? RETVAL]
       [(unitcom-expr? com) (value-of-unitcom (unitcom-expr-ucom com) env)] ;(error (unitcom-expr-ucom com)) 
@@ -327,7 +328,7 @@
         (extend-saved-env var (value-of-expression arg arg-env) saved-env-copy)))))
 
 (define apply-procedure
-  (lambda (rator args)    
+  (lambda (rator args name)    
     (let (
         [vars (procedure-vars (expval-value rator))]
         [body (procedure-body (expval-value rator))]
@@ -335,7 +336,14 @@
       (begin
         ;(display env)
         (define orig-env env)
-        (let ([res (value-of-command body (extend-env-args vars args saved-env orig-env))])
+        (define saved-env-copy saved-env)
+        ;(display name)
+        (set! saved-env-copy (list `extend-env name rator saved-env))
+        ;(display saved-env-copy)
+        ;(display orig-env)
+        ;(display "#####\n")
+        ;(display args)
+        (let ([res (value-of-command body (extend-env-args vars args saved-env-copy orig-env))])
           (reset-env-and-return-val orig-env res))))  
       ))
 
@@ -347,16 +355,21 @@
 
 (define value-of-call-expr
   (lambda (c env)
+    (begin
+      ;(display "CALL")
+      ;(display env)
+      ;(display "#########\n")
     (let (
         [rator (apply-env (call-expr-v c) env)] ; fixme check accessing env
         [args (call-expr-args c)])
       (begin
+        ;(display (procedure-saved-env (expval-value rator)))
         (set! RETURN-VAL (+ RETURN-VAL 1))
-        (let ([r (apply-procedure rator args)])
+        (let ([r (apply-procedure rator args (call-expr-v c))])
         (begin
           (set! RETURN? #f)
           r)))
-      )))
+      ))))
 ;-------------------------------------------------------
 
 ;make return value--------------------------------------

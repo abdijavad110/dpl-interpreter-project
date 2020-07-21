@@ -31,12 +31,15 @@
              saved-val
              (apply-env  search-var saved-env))))
       (else
-       (report-invalid-env )))))
+       (report-invalid-env)))))
 
 
 (define report-no-binding-found
   (lambda (search-var)
-    (display  "No binding variable" )))
+    (begin
+      (display  "No binding variable " )
+      (display search-var)
+      (display "\n"))))
 
 (define report-invalid-env
   (lambda ()
