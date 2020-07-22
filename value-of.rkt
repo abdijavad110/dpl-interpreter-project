@@ -22,6 +22,10 @@
   (lambda (p) (cond
     [(procedure? p) (proc-expval p)]
     [else (raise-user-error p) (raise-user-error "Error")])))
+
+;thunk-------------
+(struct thunk (exp senv))
+
 ;-------------------------------------------------------
 
 (define racket-list->expval
@@ -271,9 +275,11 @@
   (lambda (b x)
   (cond
     [(cexp-expr? b) (value-of-cexpression (bexpression-c1 b) env)]
-    [(mult-expr? b) (operator-helper *
-                                   (expval-value (value-of-cexpression (bexpression-c1 b) env))
-                                   (expval-value (value-of-bexpression (mult-expr-b1 b) env)))]
+    [(mult-expr? b) (let ([left (expval-value (value-of-cexpression (bexpression-c1 b) env))])
+                        (case left
+                          [(0) (number->expval left)]
+                          [(#f) (bool->expval left)]
+                          [else (operator-helper * left (expval-value (value-of-bexpression (mult-expr-b1 b) env)))]))]
     [(divide-expr? b) (operator-helper /
                                    (expval-value (value-of-cexpression (bexpression-c1 b) env))
                                    (expval-value (value-of-bexpression (divide-expr-b1 b) env)))])))
