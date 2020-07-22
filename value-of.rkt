@@ -29,12 +29,15 @@
 (struct func-thunk thunk (f))
 (struct call-thunk thunk (c))
 (define value-of-thunk (lambda (var th)
-  (let ([val (cond
-            [(exp-thunk? th) (value-of-expression (exp-thunk-e th) (thunk-senv th))]
-            [(func-thunk? th) (value-of-func-expr (func-thunk-f th) (thunk-senv th))]
-            [(call-thunk? th) (value-of-call-expr (call-thunk-c th) (thunk-senv th))]
+  (begin
+    (define org-env env)
+    (let ([senv (thunk-senv th)]) (let ([val (cond
+            [(exp-thunk? th) (begin (reset-env-and-return-val senv '()) (value-of-expression (exp-thunk-e th) senv))]
+            [(func-thunk? th) (value-of-func-expr (func-thunk-f th) senv)]
+            [(call-thunk? th) (value-of-call-expr (call-thunk-c th) senv)]
+            ;[(call-thunk? th) (begin (display (call-thunk-c th)) (display "\n") (display (thunk-senv th)) (value-of-call-expr (call-thunk-c th) (thunk-senv th)))]
             [else (raise-user-error th "is not a valid thunk")])])
-    (begin (extend-env var val) val))))
+      (begin (reset-env-and-return-val org-env '()) (extend-env var val) val))))))
 
 ;-------------------------------------------------------
 
@@ -305,8 +308,9 @@
       [(var-expr? c) (let ([val (apply-env (var-expr-var c) env)]) (if (thunk? val) (value-of-thunk (var-expr-var c) val) val))]
       [(string-expr? c) (string->expval (string-expr-string-val c))]
       [(list-expr? c) (value-of-our-list (list-expr-l c) env)]
-      [(listmem-expr? c) (reference-helper (expval-value (let ([val (apply-env (listmem-expr-var c) env)])
-            (if (thunk? val) (value-of-thunk (listmem-expr-var c) val) val))) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
+      ;[(listmem-expr? c) (reference-helper (expval-value (let ([val (apply-env (listmem-expr-var c) env)])
+       ;     (if (thunk? val) (value-of-thunk (listmem-expr-var c) val) val))) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
+      [(listmem-expr? c) (reference-helper (expval-value (apply-env (listmem-expr-var c) env)) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
 
 (define value-of-listValues
   (lambda (lv x)
@@ -348,23 +352,17 @@
         (extend-saved-env var (exp-thunk arg-env arg) saved-env-copy)))))
 
 (define apply-procedure
-  (lambda (rator args name)    
+  (lambda (rator args name thunk-env)
     (let (
         [vars (procedure-vars (expval-value rator))]
         [body (procedure-body (expval-value rator))]
         [saved-env (procedure-saved-env (expval-value rator))])
       (begin
-        ;(display env)
         (define orig-env env)
         (define saved-env-copy saved-env)
-        ;(display name)
         (set! saved-env-copy (list `extend-env name rator saved-env))
-        ;(display saved-env-copy)
-        ;(display orig-env)
-        ;(display "#####\n")
-        ;(display args)
         (let ([res (value-of-command body (extend-env-args vars args saved-env-copy orig-env))])
-          (reset-env-and-return-val orig-env res))))  
+          (reset-env-and-return-val orig-env res))))
       ))
 
 (define value-of-func-expr
@@ -381,7 +379,7 @@
         [args (call-expr-args c)])
       (begin
         (set! RETURN-VAL (+ RETURN-VAL 1))
-        (let ([r (apply-procedure rator args (call-expr-v c))])
+        (let ([r (apply-procedure rator args (call-expr-v c) env)])
         (begin
           (set! RETURN? #f)
           r)))
@@ -414,6 +412,9 @@
       )))
 
 (evaluate "inp.txt")
+;(display "\n")
 ;(display env)
 ;(display "\n")
-;(display (thunk-senv (apply-env 'c env)))
+;(display (thunk-senv (apply-env 'b env)))
+;(display "\n")
+;(display "\n")
