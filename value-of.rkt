@@ -24,7 +24,17 @@
     [else (raise-user-error p) (raise-user-error "Error")])))
 
 ;thunk-------------
-(struct thunk (exp senv))
+(struct thunk (senv))
+(struct exp-thunk thunk (e))
+(struct func-thunk thunk (f))
+(struct call-thunk thunk (c))
+(define value-of-thunk (lambda (var th)
+  (let ([val (cond
+            [(exp-thunk? th) (value-of-expression (exp-thunk-e th) (thunk-senv th))]
+            [(func-thunk? th) (value-of-func-expr (func-thunk-f th) (thunk-senv th))]
+            [(call-thunk? th) (value-of-call-expr (call-thunk-c th) (thunk-senv th))]
+            [else (raise-user-error th "is not a valid thunk")])])
+    (begin (extend-env var val) val))))
 
 ;-------------------------------------------------------
 
@@ -105,9 +115,9 @@
 (define value-of-assign
     (lambda (ae x)
       (cond
-        [(assign-exp-expr? ae)  (extend-env (assign-var ae) (value-of-expression (assign-exp-expr-exp ae) env))]
-        [(assign-function-expr? ae) (extend-env (assign-var ae) (value-of-func-expr (assign-function-expr-f ae) env))]
-        [(assign-call-expr? ae) (extend-env (assign-var ae) (value-of-call-expr (assign-call-expr-c ae) env))]
+        [(assign-exp-expr? ae)  (extend-env (assign-var ae) (exp-thunk env (assign-exp-expr-exp ae)))]
+        [(assign-function-expr? ae) (extend-env (assign-var ae) (func-thunk env (assign-function-expr-f ae)))]
+        [(assign-call-expr? ae) (extend-env (assign-var ae) (call-thunk env (assign-call-expr-c ae)))]
         [else (raise-user-error "not a assigncom")])))
 ;-------------------------------------------------------
 
@@ -292,10 +302,11 @@
       [(posnum-expr? c) (number->expval (posnum-expr-posnumber c))]
       [(null-expr? c) (null->expval)]
       [(bool-expr? c) (bool->expval (bool-expr-val c))]
-      [(var-expr? c) (apply-env (var-expr-var c) env)]
+      [(var-expr? c) (let ([val (apply-env (var-expr-var c) env)]) (if (thunk? val) (value-of-thunk (var-expr-var c) val) val))]
       [(string-expr? c) (string->expval (string-expr-string-val c))]
       [(list-expr? c) (value-of-our-list (list-expr-l c) env)]
-      [(listmem-expr? c) (reference-helper (expval-value (apply-env (listmem-expr-var c) env)) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
+      [(listmem-expr? c) (reference-helper (expval-value (let ([val (apply-env (listmem-expr-var c) env)])
+            (if (thunk? val) (value-of-thunk (listmem-expr-var c) val) val))) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
 
 (define value-of-listValues
   (lambda (lv x)
@@ -326,7 +337,6 @@
         [var (vars-v vars)]
         [arg (args-exp1 args)])
       (begin
-        ;(display saved-env)
         (define saved-env-copy saved-env)
         (if (and (multi-vars-expr? vars) (multi-args-expr? args))
             (begin
@@ -334,13 +344,8 @@
               (set! saved-env-copy env))
               ;(display saved-env-copy))
             (if (or (multi-vars-expr? vars) (multi-args-expr? args)) (raise-user-error "args number doesn't match variables") '()))
-        ;(display saved-env-copy)
-        ;(display "\n")
-        ;(display arg-env)
-        ;(display (expression-a1 arg))
-        ;(display "###\n")
         (reset-env-and-return-val arg-env '())
-        (extend-saved-env var (value-of-expression arg arg-env) saved-env-copy)))))
+        (extend-saved-env var (exp-thunk arg-env arg) saved-env-copy)))))
 
 (define apply-procedure
   (lambda (rator args name)    
@@ -371,14 +376,10 @@
 (define value-of-call-expr
   (lambda (c env)
     (begin
-      ;(display "CALL")
-      ;(display env)
-      ;(display "#########\n")
     (let (
-        [rator (apply-env (call-expr-v c) env)] ; fixme check accessing env
+        [rator (let ([rt (apply-env (call-expr-v c) env)]) (if (thunk? rt) (value-of-thunk (call-expr-v c) rt) rt))]
         [args (call-expr-args c)])
       (begin
-        ;(display (procedure-saved-env (expval-value rator)))
         (set! RETURN-VAL (+ RETURN-VAL 1))
         (let ([r (apply-procedure rator args (call-expr-v c))])
         (begin
@@ -413,3 +414,6 @@
       )))
 
 (evaluate "inp.txt")
+;(display env)
+;(display "\n")
+;(display (thunk-senv (apply-env 'c env)))
