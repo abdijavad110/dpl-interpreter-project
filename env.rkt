@@ -18,6 +18,10 @@
       (set! env orig-env)
       res)))
 
+(define set-env
+  (lambda (orig-env)
+    (set! env orig-env)))
+
 (define apply-env
   (lambda (search-var env)
     (cond

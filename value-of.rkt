@@ -31,13 +31,12 @@
 (define value-of-thunk (lambda (var th)
   (begin
     (define org-env env)
-    (let ([senv (thunk-senv th)]) (let ([val (cond
-            [(exp-thunk? th) (begin (reset-env-and-return-val senv '()) (value-of-expression (exp-thunk-e th) senv))]
+    (let ([senv (thunk-senv th)]) (begin (set-env senv) (let ([val (cond
+            [(exp-thunk? th) (value-of-expression (exp-thunk-e th) senv)]
             [(func-thunk? th) (value-of-func-expr (func-thunk-f th) senv)]
             [(call-thunk? th) (value-of-call-expr (call-thunk-c th) senv)]
-            ;[(call-thunk? th) (begin (display (call-thunk-c th)) (display "\n") (display (thunk-senv th)) (value-of-call-expr (call-thunk-c th) (thunk-senv th)))]
             [else (raise-user-error th "is not a valid thunk")])])
-      (begin (reset-env-and-return-val org-env '()) (extend-env var val) val))))))
+      (begin (set-env org-env) (extend-env var val) val)))))))
 
 ;-------------------------------------------------------
 
@@ -308,9 +307,9 @@
       [(var-expr? c) (let ([val (apply-env (var-expr-var c) env)]) (if (thunk? val) (value-of-thunk (var-expr-var c) val) val))]
       [(string-expr? c) (string->expval (string-expr-string-val c))]
       [(list-expr? c) (value-of-our-list (list-expr-l c) env)]
-      ;[(listmem-expr? c) (reference-helper (expval-value (let ([val (apply-env (listmem-expr-var c) env)])
-       ;     (if (thunk? val) (value-of-thunk (listmem-expr-var c) val) val))) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
-      [(listmem-expr? c) (reference-helper (expval-value (apply-env (listmem-expr-var c) env)) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
+      [(listmem-expr? c) (reference-helper (expval-value (let ([val (apply-env (listmem-expr-var c) env)])
+            (if (thunk? val) (value-of-thunk (listmem-expr-var c) val) val))) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
+      ;[(listmem-expr? c) (reference-helper (expval-value (apply-env (listmem-expr-var c) env)) (expval-value (value-of-listmem (listmem-expr-lm c) env)))])))
 
 (define value-of-listValues
   (lambda (lv x)
