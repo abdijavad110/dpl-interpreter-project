@@ -31,5 +31,13 @@ ftof=func(a,b){
 	return c
 };
 b=ftof(10,6);
-return b
 
+
+lazy=func(a,b,c){
+
+return a[1]*b[0]*c[4]
+	
+};
+h=[0,3];
+b=lazy(h,h,h);
+return b

@@ -412,8 +412,8 @@
       )))
 
 (evaluate "lib.txt")
-;(set! RETURN? #f)
-;(evaluate "inp.txt")
+(set! RETURN? #f)
+(evaluate "inp.txt")
 ;(display "\n")
 ;(display env)
 ;(display "\n")
