@@ -1,5 +1,29 @@
+fuck = func(b) {
+if b == 0 then return 1 else c=fuck(b-1); return b*c endif
+};
+a = 4;
+b = fuck(a);
+
 listmaker = func(a, b) {
 if a == 0 then return [] else a = listmaker(a-1, b); return a + [b] endif
 };
 b = listmaker(3, 5);
+
+
+
+append=func(a,b){
+return a+b
+};
+
+b = append("salam", "khoobi");
+
+
+
+ftof=func(a,b){
+	while b!=0 do a=a-1;b=b-1; c=fuck(a) end ;
+	c=fuck(a);
+	return c
+};
+b=ftof(10,6);
 return b
+
