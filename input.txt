@@ -1,5 +1,5 @@
-0	g128537	=	(g128538)
-1	g128538	=	(command EOF)
+0	g156795	=	(g156796)
+1	g156796	=	(command EOF)
 2	command	=	(unitcom)
 3	command	=	(command SEMICOL unitcom)
 4	unitcom	=	(whilecom)
@@ -46,26 +46,26 @@
 45	args	=	(exp)
 46	args	=	(exp COMMA args)
 State 0
-	g128537 -> . g128538 
+	g156795 -> . g156796 
 
 	unitcom					goto	3
-	g128538					goto	1
+	return					goto	7
 	whilecom					goto	4
 	command					goto	2
+	g156796					goto	1
 	ifcom					goto	5
 	IF					shift	10
 	WHILE					shift	9
 	VARIABLE					shift	8
 	assign					goto	6
 	RETURN					shift	11
-	return					goto	7
 
 State 1
-	g128537 -> g128538 . 
+	g156795 -> g156796 . 
 
 
 State 2
-	g128538 -> command . EOF 
+	g156796 -> command . EOF 
 	command -> command . SEMICOL unitcom 
 
 	EOF					accept	
@@ -183,7 +183,7 @@ State 11
 	-					shift	23
 
 State 12
-	g128538 -> command EOF . 
+	g156796 -> command EOF . 
 
 
 State 13

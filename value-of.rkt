@@ -412,7 +412,6 @@
       )))
 
 (evaluate "lib.txt")
-;(evaluate "inptest.txt")
 ;(set! RETURN? #f)
 ;(evaluate "inp.txt")
 ;(display "\n")

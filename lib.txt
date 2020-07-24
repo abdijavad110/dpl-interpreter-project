@@ -60,6 +60,24 @@ cdr=func(lst){
 };
 r=cdr([1,2,3]);
 
+
+set=func(a,index,value){
+	i=0;
+	newlist=[];
+	len=length(a);
+	while i!=len do 
+		if i==index then
+			newlist=newlist+[value]
+		else
+			newlist=newlist+[a[i]]		
+		endif;
+		i=i+1
+	end;
+	return newlist
+};
+
+r=set([1,3,4],0,7);
+
 merge=func(la,lb){
 	newlist=[];
 	go=true;
@@ -106,5 +124,8 @@ mergesort=func(lst){
 };
 
 r=mergesort([111,6,3,-1]);
+
+
+
 return r
 
