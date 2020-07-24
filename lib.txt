@@ -1,0 +1,17 @@
+pow= func(a,b) {
+if b == 0 then return 1 else c=pow(a,b-1); return a*c endif
+};
+
+r=pow(3,0);
+
+makelist = func(a, b) {
+if a<0 then return [] else 
+if a == 0 then return [] else a = makelist(a-1, b); return a + [b] endif
+endif
+};
+r = makelist(9, "wq");
+
+
+
+return r
+

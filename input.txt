@@ -1,0 +1,1318 @@
+0	g128537	=	(g128538)
+1	g128538	=	(command EOF)
+2	command	=	(unitcom)
+3	command	=	(command SEMICOL unitcom)
+4	unitcom	=	(whilecom)
+5	unitcom	=	(ifcom)
+6	unitcom	=	(assign)
+7	unitcom	=	(return)
+8	whilecom	=	(WHILE exp DO command END)
+9	ifcom	=	(IF exp THEN command ELSE command ENDIF)
+10	assign	=	(VARIABLE = exp)
+11	assign	=	(VARIABLE = function)
+12	assign	=	(VARIABLE = call)
+13	return	=	(RETURN exp)
+14	exp	=	(aexp)
+15	exp	=	(aexp > aexp)
+16	exp	=	(aexp < aexp)
+17	exp	=	(aexp == aexp)
+18	exp	=	(aexp != aexp)
+19	aexp	=	(bexp)
+20	aexp	=	(bexp - aexp)
+21	aexp	=	(bexp + aexp)
+22	bexp	=	(cexp)
+23	bexp	=	(cexp * bexp)
+24	bexp	=	(cexp / bexp)
+25	cexp	=	(- cexp)
+26	cexp	=	(LPAR exp RPAR)
+27	cexp	=	(POS)
+28	cexp	=	(NULL)
+29	cexp	=	(VARIABLE)
+30	cexp	=	(TRUE)
+31	cexp	=	(FALSE)
+32	cexp	=	(STRING)
+33	cexp	=	(our-list)
+34	cexp	=	(VARIABLE listmem)
+35	our-list	=	(LBRACKET listValues RBRACKET)
+36	our-list	=	(LBRACKET RBRACKET)
+37	listValues	=	(exp)
+38	listValues	=	(exp COMMA listValues)
+39	listmem	=	(LBRACKET exp RBRACKET)
+40	listmem	=	(LBRACKET exp RBRACKET listmem)
+41	function	=	(FUNC LPAR vars RPAR LBRACE command RBRACE)
+42	vars	=	(VARIABLE)
+43	vars	=	(VARIABLE COMMA vars)
+44	call	=	(VARIABLE LPAR args RPAR)
+45	args	=	(exp)
+46	args	=	(exp COMMA args)
+State 0
+	g128537 -> . g128538 
+
+	unitcom					goto	3
+	g128538					goto	1
+	whilecom					goto	4
+	command					goto	2
+	ifcom					goto	5
+	IF					shift	10
+	WHILE					shift	9
+	VARIABLE					shift	8
+	assign					goto	6
+	RETURN					shift	11
+	return					goto	7
+
+State 1
+	g128537 -> g128538 . 
+
+
+State 2
+	g128538 -> command . EOF 
+	command -> command . SEMICOL unitcom 
+
+	EOF					accept	
+	SEMICOL					shift	13
+
+State 3
+	command -> unitcom . 
+
+	END					reduce	2
+	EOF					reduce	2
+	RBRACE					reduce	2
+	ENDIF					reduce	2
+	ELSE					reduce	2
+	SEMICOL					reduce	2
+
+State 4
+	unitcom -> whilecom . 
+
+	END					reduce	4
+	EOF					reduce	4
+	RBRACE					reduce	4
+	ENDIF					reduce	4
+	ELSE					reduce	4
+	SEMICOL					reduce	4
+
+State 5
+	unitcom -> ifcom . 
+
+	END					reduce	5
+	EOF					reduce	5
+	RBRACE					reduce	5
+	ENDIF					reduce	5
+	ELSE					reduce	5
+	SEMICOL					reduce	5
+
+State 6
+	unitcom -> assign . 
+
+	END					reduce	6
+	EOF					reduce	6
+	RBRACE					reduce	6
+	ENDIF					reduce	6
+	ELSE					reduce	6
+	SEMICOL					reduce	6
+
+State 7
+	unitcom -> return . 
+
+	END					reduce	7
+	EOF					reduce	7
+	RBRACE					reduce	7
+	ENDIF					reduce	7
+	ELSE					reduce	7
+	SEMICOL					reduce	7
+
+State 8
+	assign -> VARIABLE . = exp 
+	assign -> VARIABLE . = function 
+	assign -> VARIABLE . = call 
+
+	=					shift	14
+
+State 9
+	whilecom -> WHILE . exp DO command END 
+
+	bexp					goto	17
+	VARIABLE					shift	20
+	our-list					goto	19
+	POS					shift	21
+	exp					goto	15
+	FALSE					shift	28
+	STRING					shift	22
+	TRUE					shift	27
+	LPAR					shift	24
+	aexp					goto	16
+	cexp					goto	18
+	NULL					shift	26
+	LBRACKET					shift	25
+	-					shift	23
+
+State 10
+	ifcom -> IF . exp THEN command ELSE command ENDIF 
+
+	bexp					goto	17
+	VARIABLE					shift	20
+	our-list					goto	19
+	POS					shift	21
+	exp					goto	29
+	FALSE					shift	28
+	STRING					shift	22
+	TRUE					shift	27
+	LPAR					shift	24
+	aexp					goto	16
+	cexp					goto	18
+	NULL					shift	26
+	LBRACKET					shift	25
+	-					shift	23
+
+State 11
+	return -> RETURN . exp 
+
+	bexp					goto	17
+	VARIABLE					shift	20
+	our-list					goto	19
+	POS					shift	21
+	exp					goto	30
+	FALSE					shift	28
+	STRING					shift	22
+	TRUE					shift	27
+	LPAR					shift	24
+	aexp					goto	16
+	cexp					goto	18
+	NULL					shift	26
+	LBRACKET					shift	25
+	-					shift	23
+
+State 12
+	g128538 -> command EOF . 
+
+
+State 13
+	command -> command SEMICOL . unitcom 
+
+	unitcom					goto	31
+	return					goto	7
+	whilecom					goto	4
+	ifcom					goto	5
+	IF					shift	10
+	WHILE					shift	9
+	VARIABLE					shift	8
+	assign					goto	6
+	RETURN					shift	11
+
+State 14
+	assign -> VARIABLE = . exp 
+	assign -> VARIABLE = . function 
+	assign -> VARIABLE = . call 
+
+	TRUE					shift	27
+	function					goto	33
+	bexp					goto	17
+	our-list					goto	19
+	FALSE					shift	28
+	POS					shift	21
+	exp					goto	32
+	FUNC					shift	36
+	STRING					shift	22
+	call					goto	34
+	LBRACKET					shift	25
+	LPAR					shift	24
+	aexp					goto	16
+	cexp					goto	18
+	NULL					shift	26
+	VARIABLE					shift	35
+	-					shift	23
+
+State 15
+	whilecom -> WHILE exp . DO command END 
+
+	DO					shift	37
+
+State 16
+	exp -> aexp . 
+	exp -> aexp . > aexp 
+	exp -> aexp . < aexp 
+	exp -> aexp . == aexp 
+	exp -> aexp . != aexp 
+
+	RBRACKET					reduce	14
+	RBRACE					reduce	14
+	ELSE					reduce	14
+	COMMA					reduce	14
+	==					shift	40
+	THEN					reduce	14
+	>					shift	39
+	EOF					reduce	14
+	DO					reduce	14
+	ENDIF					reduce	14
+	!=					shift	41
+	SEMICOL					reduce	14
+	END					reduce	14
+	<					shift	38
+	RPAR					reduce	14
+
+State 17
+	aexp -> bexp . 
+	aexp -> bexp . - aexp 
+	aexp -> bexp . + aexp 
+
+	RBRACKET					reduce	19
+	RBRACE					reduce	19
+	ENDIF					reduce	19
+	ELSE					reduce	19
+	COMMA					reduce	19
+	-					shift	43
+	+					shift	42
+	THEN					reduce	19
+	==					reduce	19
+	SEMICOL					reduce	19
+	EOF					reduce	19
+	DO					reduce	19
+	>					reduce	19
+	!=					reduce	19
+	END					reduce	19
+	<					reduce	19
+	RPAR					reduce	19
+
+State 18
+	bexp -> cexp . 
+	bexp -> cexp . * bexp 
+	bexp -> cexp . / bexp 
+
+	RBRACKET					reduce	22
+	RBRACE					reduce	22
+	ELSE					reduce	22
+	COMMA					reduce	22
+	EOF					reduce	22
+	/					shift	45
+	+					reduce	22
+	THEN					reduce	22
+	==					reduce	22
+	SEMICOL					reduce	22
+	>					reduce	22
+	DO					reduce	22
+	ENDIF					reduce	22
+	!=					reduce	22
+	-					reduce	22
+	END					reduce	22
+	<					reduce	22
+	*					shift	44
+	RPAR					reduce	22
+
+State 19
+	cexp -> our-list . 
+
+	RBRACKET					reduce	33
+	RBRACE					reduce	33
+	COMMA					reduce	33
+	ELSE					reduce	33
+	/					reduce	33
+	SEMICOL					reduce	33
+	EOF					reduce	33
+	+					reduce	33
+	THEN					reduce	33
+	==					reduce	33
+	*					reduce	33
+	>					reduce	33
+	DO					reduce	33
+	ENDIF					reduce	33
+	!=					reduce	33
+	-					reduce	33
+	END					reduce	33
+	<					reduce	33
+	RPAR					reduce	33
+
+State 20
+	cexp -> VARIABLE . 
+	cexp -> VARIABLE . listmem 
+
+	RBRACKET					reduce	29
+	RBRACE					reduce	29
+	COMMA					reduce	29
+	ELSE					reduce	29
+	/					reduce	29
+	SEMICOL					reduce	29
+	EOF					reduce	29
+	+					reduce	29
+	THEN					reduce	29
+	==					reduce	29
+	LBRACKET					shift	47
+	*					reduce	29
+	>					reduce	29
+	DO					reduce	29
+	ENDIF					reduce	29
+	!=					reduce	29
+	-					reduce	29
+	END					reduce	29
+	<					reduce	29
+	listmem					goto	46
+	RPAR					reduce	29
+
+State 21
+	cexp -> POS . 
+
+	RBRACKET					reduce	27
+	RBRACE					reduce	27
+	COMMA					reduce	27
+	ELSE					reduce	27
+	/					reduce	27
+	SEMICOL					reduce	27
+	EOF					reduce	27
+	+					reduce	27
+	THEN					reduce	27
+	==					reduce	27
+	*					reduce	27
+	>					reduce	27
+	DO					reduce	27
+	ENDIF					reduce	27
+	!=					reduce	27
+	-					reduce	27
+	END					reduce	27
+	<					reduce	27
+	RPAR					reduce	27
+
+State 22
+	cexp -> STRING . 
+
+	RBRACKET					reduce	32
+	RBRACE					reduce	32
+	COMMA					reduce	32
+	ELSE					reduce	32
+	/					reduce	32
+	SEMICOL					reduce	32
+	EOF					reduce	32
+	+					reduce	32
+	THEN					reduce	32
+	==					reduce	32
+	*					reduce	32
+	>					reduce	32
+	DO					reduce	32
+	ENDIF					reduce	32
+	!=					reduce	32
+	-					reduce	32
+	END					reduce	32
+	<					reduce	32
+	RPAR					reduce	32
+
+State 23
+	cexp -> - . cexp 
+
+	TRUE					shift	27
+	LPAR					shift	24
+	LBRACKET					shift	25
+	our-list					goto	19
+	FALSE					shift	28
+	cexp					goto	48
+	POS					shift	21
+	NULL					shift	26
+	VARIABLE					shift	20
+	STRING					shift	22
+	-					shift	23
+
+State 24
+	cexp -> LPAR . exp RPAR 
+
+	bexp					goto	17
+	VARIABLE					shift	20
+	our-list					goto	19
+	POS					shift	21
+	exp					goto	49
+	FALSE					shift	28
+	STRING					shift	22
+	TRUE					shift	27
+	LPAR					shift	24
+	aexp					goto	16
+	cexp					goto	18
+	NULL					shift	26
+	LBRACKET					shift	25
+	-					shift	23
+
+State 25
+	our-list -> LBRACKET . listValues RBRACKET 
+	our-list -> LBRACKET . RBRACKET 
+
+	TRUE					shift	27
+	RBRACKET					shift	52
+	bexp					goto	17
+	listValues					goto	51
+	our-list					goto	19
+	FALSE					shift	28
+	POS					shift	21
+	exp					goto	50
+	STRING					shift	22
+	VARIABLE					shift	20
+	LPAR					shift	24
+	aexp					goto	16
+	cexp					goto	18
+	NULL					shift	26
+	LBRACKET					shift	25
+	-					shift	23
+
+State 26
+	cexp -> NULL . 
+
+	RBRACKET					reduce	28
+	RBRACE					reduce	28
+	COMMA					reduce	28
+	ELSE					reduce	28
+	/					reduce	28
+	SEMICOL					reduce	28
+	EOF					reduce	28
+	+					reduce	28
+	THEN					reduce	28
+	==					reduce	28
+	*					reduce	28
+	>					reduce	28
+	DO					reduce	28
+	ENDIF					reduce	28
+	!=					reduce	28
+	-					reduce	28
+	END					reduce	28
+	<					reduce	28
+	RPAR					reduce	28
+
+State 27
+	cexp -> TRUE . 
+
+	RBRACKET					reduce	30
+	RBRACE					reduce	30
+	COMMA					reduce	30
+	ELSE					reduce	30
+	/					reduce	30
+	SEMICOL					reduce	30
+	EOF					reduce	30
+	+					reduce	30
+	THEN					reduce	30
+	==					reduce	30
+	*					reduce	30
+	>					reduce	30
+	DO					reduce	30
+	ENDIF					reduce	30
+	!=					reduce	30
+	-					reduce	30
+	END					reduce	30
+	<					reduce	30
+	RPAR					reduce	30
+
+State 28
+	cexp -> FALSE . 
+
+	RBRACKET					reduce	31
+	RBRACE					reduce	31
+	COMMA					reduce	31
+	ELSE					reduce	31
+	/					reduce	31
+	SEMICOL					reduce	31
+	EOF					reduce	31
+	+					reduce	31
+	THEN					reduce	31
+	==					reduce	31
+	*					reduce	31
+	>					reduce	31
+	DO					reduce	31
+	ENDIF					reduce	31
+	!=					reduce	31
+	-					reduce	31
+	END					reduce	31
+	<					reduce	31
+	RPAR					reduce	31
+
+State 29
+	ifcom -> IF exp . THEN command ELSE command ENDIF 
+
+	THEN					shift	53
+
+State 30
+	return -> RETURN exp . 
+
+	END					reduce	13
+	EOF					reduce	13
+	RBRACE					reduce	13
+	ENDIF					reduce	13
+	ELSE					reduce	13
+	SEMICOL					reduce	13
+
+State 31
+	command -> command SEMICOL unitcom . 
+
+	END					reduce	3
+	EOF					reduce	3
+	RBRACE					reduce	3
+	ENDIF					reduce	3
+	ELSE					reduce	3
+	SEMICOL					reduce	3
+
+State 32
+	assign -> VARIABLE = exp . 
+
+	END					reduce	10
+	EOF					reduce	10
+	RBRACE					reduce	10
+	ENDIF					reduce	10
+	ELSE					reduce	10
+	SEMICOL					reduce	10
+
+State 33
+	assign -> VARIABLE = function . 
+
+	END					reduce	11
+	EOF					reduce	11
+	RBRACE					reduce	11
+	ENDIF					reduce	11
+	ELSE					reduce	11
+	SEMICOL					reduce	11
+
+State 34
+	assign -> VARIABLE = call . 
+
+	END					reduce	12
+	EOF					reduce	12
+	RBRACE					reduce	12
+	ENDIF					reduce	12
+	ELSE					reduce	12
+	SEMICOL					reduce	12
+
+State 35
+	cexp -> VARIABLE . 
+	cexp -> VARIABLE . listmem 
+	call -> VARIABLE . LPAR args RPAR 
+
+	LBRACKET					shift	47
+	RBRACE					reduce	29
+	END					reduce	29
+	ELSE					reduce	29
+	/					reduce	29
+	EOF					reduce	29
+	+					reduce	29
+	==					reduce	29
+	*					reduce	29
+	>					reduce	29
+	ENDIF					reduce	29
+	LPAR					shift	54
+	SEMICOL					reduce	29
+	!=					reduce	29
+	<					reduce	29
+	listmem					goto	46
+	-					reduce	29
+
+State 36
+	function -> FUNC . LPAR vars RPAR LBRACE command RBRACE 
+
+	LPAR					shift	55
+
+State 37
+	whilecom -> WHILE exp DO . command END 
+
+	unitcom					goto	3
+	return					goto	7
+	whilecom					goto	4
+	command					goto	56
+	ifcom					goto	5
+	IF					shift	10
+	WHILE					shift	9
+	VARIABLE					shift	8
+	assign					goto	6
+	RETURN					shift	11
+
+State 38
+	exp -> aexp < . aexp 
+
+	bexp					goto	17
+	VARIABLE					shift	20
+	our-list					goto	19
+	NULL					shift	26
+	STRING					shift	22
+	TRUE					shift	27
+	LPAR					shift	24
+	aexp					goto	57
+	cexp					goto	18
+	FALSE					shift	28
+	LBRACKET					shift	25
+	POS					shift	21
+	-					shift	23
+
+State 39
+	exp -> aexp > . aexp 
+
+	bexp					goto	17
+	VARIABLE					shift	20
+	our-list					goto	19
+	NULL					shift	26
+	STRING					shift	22
+	TRUE					shift	27
+	LPAR					shift	24
+	aexp					goto	58
+	cexp					goto	18
+	FALSE					shift	28
+	LBRACKET					shift	25
+	POS					shift	21
+	-					shift	23
+
+State 40
+	exp -> aexp == . aexp 
+
+	bexp					goto	17
+	VARIABLE					shift	20
+	our-list					goto	19
+	NULL					shift	26
+	STRING					shift	22
+	TRUE					shift	27
+	LPAR					shift	24
+	aexp					goto	59
+	cexp					goto	18
+	FALSE					shift	28
+	LBRACKET					shift	25
+	POS					shift	21
+	-					shift	23
+
+State 41
+	exp -> aexp != . aexp 
+
+	bexp					goto	17
+	VARIABLE					shift	20
+	our-list					goto	19
+	NULL					shift	26
+	STRING					shift	22
+	TRUE					shift	27
+	LPAR					shift	24
+	aexp					goto	60
+	cexp					goto	18
+	FALSE					shift	28
+	LBRACKET					shift	25
+	POS					shift	21
+	-					shift	23
+
+State 42
+	aexp -> bexp + . aexp 
+
+	bexp					goto	17
+	VARIABLE					shift	20
+	our-list					goto	19
+	NULL					shift	26
+	STRING					shift	22
+	TRUE					shift	27
+	LPAR					shift	24
+	aexp					goto	61
+	cexp					goto	18
+	FALSE					shift	28
+	LBRACKET					shift	25
+	POS					shift	21
+	-					shift	23
+
+State 43
+	aexp -> bexp - . aexp 
+
+	bexp					goto	17
+	VARIABLE					shift	20
+	our-list					goto	19
+	NULL					shift	26
+	STRING					shift	22
+	TRUE					shift	27
+	LPAR					shift	24
+	aexp					goto	62
+	cexp					goto	18
+	FALSE					shift	28
+	LBRACKET					shift	25
+	POS					shift	21
+	-					shift	23
+
+State 44
+	bexp -> cexp * . bexp 
+
+	TRUE					shift	27
+	LPAR					shift	24
+	LBRACKET					shift	25
+	bexp					goto	63
+	our-list					goto	19
+	FALSE					shift	28
+	cexp					goto	18
+	POS					shift	21
+	NULL					shift	26
+	VARIABLE					shift	20
+	STRING					shift	22
+	-					shift	23
+
+State 45
+	bexp -> cexp / . bexp 
+
+	TRUE					shift	27
+	LPAR					shift	24
+	LBRACKET					shift	25
+	bexp					goto	64
+	our-list					goto	19
+	FALSE					shift	28
+	cexp					goto	18
+	POS					shift	21
+	NULL					shift	26
+	VARIABLE					shift	20
+	STRING					shift	22
+	-					shift	23
+
+State 46
+	cexp -> VARIABLE listmem . 
+
+	RBRACKET					reduce	34
+	RBRACE					reduce	34
+	COMMA					reduce	34
+	ELSE					reduce	34
+	/					reduce	34
+	SEMICOL					reduce	34
+	EOF					reduce	34
+	+					reduce	34
+	THEN					reduce	34
+	==					reduce	34
+	*					reduce	34
+	>					reduce	34
+	DO					reduce	34
+	ENDIF					reduce	34
+	!=					reduce	34
+	-					reduce	34
+	END					reduce	34
+	<					reduce	34
+	RPAR					reduce	34
+
+State 47
+	listmem -> LBRACKET . exp RBRACKET 
+	listmem -> LBRACKET . exp RBRACKET listmem 
+
+	bexp					goto	17
+	VARIABLE					shift	20
+	our-list					goto	19
+	POS					shift	21
+	exp					goto	65
+	FALSE					shift	28
+	STRING					shift	22
+	TRUE					shift	27
+	LPAR					shift	24
+	aexp					goto	16
+	cexp					goto	18
+	NULL					shift	26
+	LBRACKET					shift	25
+	-					shift	23
+
+State 48
+	cexp -> - cexp . 
+
+	RBRACKET					reduce	25
+	RBRACE					reduce	25
+	COMMA					reduce	25
+	ELSE					reduce	25
+	/					reduce	25
+	SEMICOL					reduce	25
+	EOF					reduce	25
+	+					reduce	25
+	THEN					reduce	25
+	==					reduce	25
+	*					reduce	25
+	>					reduce	25
+	DO					reduce	25
+	ENDIF					reduce	25
+	!=					reduce	25
+	-					reduce	25
+	END					reduce	25
+	<					reduce	25
+	RPAR					reduce	25
+
+State 49
+	cexp -> LPAR exp . RPAR 
+
+	RPAR					shift	66
+
+State 50
+	listValues -> exp . 
+	listValues -> exp . COMMA listValues 
+
+	COMMA					shift	67
+	RBRACKET					reduce	37
+
+State 51
+	our-list -> LBRACKET listValues . RBRACKET 
+
+	RBRACKET					shift	68
+
+State 52
+	our-list -> LBRACKET RBRACKET . 
+
+	RBRACKET					reduce	36
+	RBRACE					reduce	36
+	COMMA					reduce	36
+	ELSE					reduce	36
+	/					reduce	36
+	SEMICOL					reduce	36
+	EOF					reduce	36
+	+					reduce	36
+	THEN					reduce	36
+	==					reduce	36
+	*					reduce	36
+	>					reduce	36
+	DO					reduce	36
+	ENDIF					reduce	36
+	!=					reduce	36
+	-					reduce	36
+	END					reduce	36
+	<					reduce	36
+	RPAR					reduce	36
+
+State 53
+	ifcom -> IF exp THEN . command ELSE command ENDIF 
+
+	unitcom					goto	3
+	return					goto	7
+	whilecom					goto	4
+	command					goto	69
+	ifcom					goto	5
+	IF					shift	10
+	WHILE					shift	9
+	VARIABLE					shift	8
+	assign					goto	6
+	RETURN					shift	11
+
+State 54
+	call -> VARIABLE LPAR . args RPAR 
+
+	TRUE					shift	27
+	bexp					goto	17
+	our-list					goto	19
+	FALSE					shift	28
+	POS					shift	21
+	exp					goto	70
+	STRING					shift	22
+	VARIABLE					shift	20
+	LPAR					shift	24
+	args					goto	71
+	aexp					goto	16
+	cexp					goto	18
+	NULL					shift	26
+	LBRACKET					shift	25
+	-					shift	23
+
+State 55
+	function -> FUNC LPAR . vars RPAR LBRACE command RBRACE 
+
+	vars					goto	72
+	VARIABLE					shift	73
+
+State 56
+	command -> command . SEMICOL unitcom 
+	whilecom -> WHILE exp DO command . END 
+
+	END					shift	74
+	SEMICOL					shift	13
+
+State 57
+	exp -> aexp < aexp . 
+
+	RBRACKET					reduce	16
+	RBRACE					reduce	16
+	DO					reduce	16
+	ENDIF					reduce	16
+	ELSE					reduce	16
+	SEMICOL					reduce	16
+	END					reduce	16
+	COMMA					reduce	16
+	EOF					reduce	16
+	THEN					reduce	16
+	RPAR					reduce	16
+
+State 58
+	exp -> aexp > aexp . 
+
+	RBRACKET					reduce	15
+	RBRACE					reduce	15
+	DO					reduce	15
+	ENDIF					reduce	15
+	ELSE					reduce	15
+	SEMICOL					reduce	15
+	END					reduce	15
+	COMMA					reduce	15
+	EOF					reduce	15
+	THEN					reduce	15
+	RPAR					reduce	15
+
+State 59
+	exp -> aexp == aexp . 
+
+	RBRACKET					reduce	17
+	RBRACE					reduce	17
+	DO					reduce	17
+	ENDIF					reduce	17
+	ELSE					reduce	17
+	SEMICOL					reduce	17
+	END					reduce	17
+	COMMA					reduce	17
+	EOF					reduce	17
+	THEN					reduce	17
+	RPAR					reduce	17
+
+State 60
+	exp -> aexp != aexp . 
+
+	RBRACKET					reduce	18
+	RBRACE					reduce	18
+	DO					reduce	18
+	ENDIF					reduce	18
+	ELSE					reduce	18
+	SEMICOL					reduce	18
+	END					reduce	18
+	COMMA					reduce	18
+	EOF					reduce	18
+	THEN					reduce	18
+	RPAR					reduce	18
+
+State 61
+	aexp -> bexp + aexp . 
+
+	RBRACKET					reduce	21
+	RBRACE					reduce	21
+	ENDIF					reduce	21
+	ELSE					reduce	21
+	COMMA					reduce	21
+	THEN					reduce	21
+	==					reduce	21
+	SEMICOL					reduce	21
+	EOF					reduce	21
+	DO					reduce	21
+	>					reduce	21
+	!=					reduce	21
+	END					reduce	21
+	<					reduce	21
+	RPAR					reduce	21
+
+State 62
+	aexp -> bexp - aexp . 
+
+	RBRACKET					reduce	20
+	RBRACE					reduce	20
+	ENDIF					reduce	20
+	ELSE					reduce	20
+	COMMA					reduce	20
+	THEN					reduce	20
+	==					reduce	20
+	SEMICOL					reduce	20
+	EOF					reduce	20
+	DO					reduce	20
+	>					reduce	20
+	!=					reduce	20
+	END					reduce	20
+	<					reduce	20
+	RPAR					reduce	20
+
+State 63
+	bexp -> cexp * bexp . 
+
+	RBRACKET					reduce	23
+	RBRACE					reduce	23
+	ELSE					reduce	23
+	COMMA					reduce	23
+	EOF					reduce	23
+	+					reduce	23
+	THEN					reduce	23
+	==					reduce	23
+	SEMICOL					reduce	23
+	>					reduce	23
+	DO					reduce	23
+	ENDIF					reduce	23
+	!=					reduce	23
+	-					reduce	23
+	END					reduce	23
+	<					reduce	23
+	RPAR					reduce	23
+
+State 64
+	bexp -> cexp / bexp . 
+
+	RBRACKET					reduce	24
+	RBRACE					reduce	24
+	ELSE					reduce	24
+	COMMA					reduce	24
+	EOF					reduce	24
+	+					reduce	24
+	THEN					reduce	24
+	==					reduce	24
+	SEMICOL					reduce	24
+	>					reduce	24
+	DO					reduce	24
+	ENDIF					reduce	24
+	!=					reduce	24
+	-					reduce	24
+	END					reduce	24
+	<					reduce	24
+	RPAR					reduce	24
+
+State 65
+	listmem -> LBRACKET exp . RBRACKET 
+	listmem -> LBRACKET exp . RBRACKET listmem 
+
+	RBRACKET					shift	75
+
+State 66
+	cexp -> LPAR exp RPAR . 
+
+	RBRACKET					reduce	26
+	RBRACE					reduce	26
+	COMMA					reduce	26
+	ELSE					reduce	26
+	/					reduce	26
+	SEMICOL					reduce	26
+	EOF					reduce	26
+	+					reduce	26
+	THEN					reduce	26
+	==					reduce	26
+	*					reduce	26
+	>					reduce	26
+	DO					reduce	26
+	ENDIF					reduce	26
+	!=					reduce	26
+	-					reduce	26
+	END					reduce	26
+	<					reduce	26
+	RPAR					reduce	26
+
+State 67
+	listValues -> exp COMMA . listValues 
+
+	TRUE					shift	27
+	bexp					goto	17
+	listValues					goto	76
+	our-list					goto	19
+	FALSE					shift	28
+	POS					shift	21
+	exp					goto	50
+	STRING					shift	22
+	VARIABLE					shift	20
+	LPAR					shift	24
+	aexp					goto	16
+	cexp					goto	18
+	NULL					shift	26
+	LBRACKET					shift	25
+	-					shift	23
+
+State 68
+	our-list -> LBRACKET listValues RBRACKET . 
+
+	RBRACKET					reduce	35
+	RBRACE					reduce	35
+	COMMA					reduce	35
+	ELSE					reduce	35
+	/					reduce	35
+	SEMICOL					reduce	35
+	EOF					reduce	35
+	+					reduce	35
+	THEN					reduce	35
+	==					reduce	35
+	*					reduce	35
+	>					reduce	35
+	DO					reduce	35
+	ENDIF					reduce	35
+	!=					reduce	35
+	-					reduce	35
+	END					reduce	35
+	<					reduce	35
+	RPAR					reduce	35
+
+State 69
+	command -> command . SEMICOL unitcom 
+	ifcom -> IF exp THEN command . ELSE command ENDIF 
+
+	ELSE					shift	77
+	SEMICOL					shift	13
+
+State 70
+	args -> exp . 
+	args -> exp . COMMA args 
+
+	COMMA					shift	78
+	RPAR					reduce	45
+
+State 71
+	call -> VARIABLE LPAR args . RPAR 
+
+	RPAR					shift	79
+
+State 72
+	function -> FUNC LPAR vars . RPAR LBRACE command RBRACE 
+
+	RPAR					shift	80
+
+State 73
+	vars -> VARIABLE . 
+	vars -> VARIABLE . COMMA vars 
+
+	COMMA					shift	81
+	RPAR					reduce	42
+
+State 74
+	whilecom -> WHILE exp DO command END . 
+
+	END					reduce	8
+	EOF					reduce	8
+	RBRACE					reduce	8
+	ENDIF					reduce	8
+	ELSE					reduce	8
+	SEMICOL					reduce	8
+
+State 75
+	listmem -> LBRACKET exp RBRACKET . 
+	listmem -> LBRACKET exp RBRACKET . listmem 
+
+	RBRACKET					reduce	39
+	RBRACE					reduce	39
+	COMMA					reduce	39
+	ELSE					reduce	39
+	/					reduce	39
+	SEMICOL					reduce	39
+	EOF					reduce	39
+	+					reduce	39
+	THEN					reduce	39
+	==					reduce	39
+	LBRACKET					shift	47
+	*					reduce	39
+	>					reduce	39
+	DO					reduce	39
+	ENDIF					reduce	39
+	!=					reduce	39
+	-					reduce	39
+	END					reduce	39
+	<					reduce	39
+	listmem					goto	82
+	RPAR					reduce	39
+
+State 76
+	listValues -> exp COMMA listValues . 
+
+	RBRACKET					reduce	38
+
+State 77
+	ifcom -> IF exp THEN command ELSE . command ENDIF 
+
+	unitcom					goto	3
+	return					goto	7
+	whilecom					goto	4
+	command					goto	83
+	ifcom					goto	5
+	IF					shift	10
+	WHILE					shift	9
+	VARIABLE					shift	8
+	assign					goto	6
+	RETURN					shift	11
+
+State 78
+	args -> exp COMMA . args 
+
+	TRUE					shift	27
+	bexp					goto	17
+	our-list					goto	19
+	FALSE					shift	28
+	POS					shift	21
+	exp					goto	70
+	STRING					shift	22
+	VARIABLE					shift	20
+	LPAR					shift	24
+	args					goto	84
+	aexp					goto	16
+	cexp					goto	18
+	NULL					shift	26
+	LBRACKET					shift	25
+	-					shift	23
+
+State 79
+	call -> VARIABLE LPAR args RPAR . 
+
+	END					reduce	44
+	EOF					reduce	44
+	RBRACE					reduce	44
+	ENDIF					reduce	44
+	ELSE					reduce	44
+	SEMICOL					reduce	44
+
+State 80
+	function -> FUNC LPAR vars RPAR . LBRACE command RBRACE 
+
+	LBRACE					shift	85
+
+State 81
+	vars -> VARIABLE COMMA . vars 
+
+	vars					goto	86
+	VARIABLE					shift	73
+
+State 82
+	listmem -> LBRACKET exp RBRACKET listmem . 
+
+	RBRACKET					reduce	40
+	RBRACE					reduce	40
+	COMMA					reduce	40
+	ELSE					reduce	40
+	/					reduce	40
+	SEMICOL					reduce	40
+	EOF					reduce	40
+	+					reduce	40
+	THEN					reduce	40
+	==					reduce	40
+	*					reduce	40
+	>					reduce	40
+	DO					reduce	40
+	ENDIF					reduce	40
+	!=					reduce	40
+	-					reduce	40
+	END					reduce	40
+	<					reduce	40
+	RPAR					reduce	40
+
+State 83
+	command -> command . SEMICOL unitcom 
+	ifcom -> IF exp THEN command ELSE command . ENDIF 
+
+	ENDIF					shift	87
+	SEMICOL					shift	13
+
+State 84
+	args -> exp COMMA args . 
+
+	RPAR					reduce	46
+
+State 85
+	function -> FUNC LPAR vars RPAR LBRACE . command RBRACE 
+
+	unitcom					goto	3
+	return					goto	7
+	whilecom					goto	4
+	command					goto	88
+	ifcom					goto	5
+	IF					shift	10
+	WHILE					shift	9
+	VARIABLE					shift	8
+	assign					goto	6
+	RETURN					shift	11
+
+State 86
+	vars -> VARIABLE COMMA vars . 
+
+	RPAR					reduce	43
+
+State 87
+	ifcom -> IF exp THEN command ELSE command ENDIF . 
+
+	END					reduce	9
+	EOF					reduce	9
+	RBRACE					reduce	9
+	ENDIF					reduce	9
+	ELSE					reduce	9
+	SEMICOL					reduce	9
+
+State 88
+	command -> command . SEMICOL unitcom 
+	function -> FUNC LPAR vars RPAR LBRACE command . RBRACE 
+
+	RBRACE					shift	89
+	SEMICOL					shift	13
+
+State 89
+	function -> FUNC LPAR vars RPAR LBRACE command RBRACE . 
+
+	END					reduce	41
+	EOF					reduce	41
+	RBRACE					reduce	41
+	ENDIF					reduce	41
+	ELSE					reduce	41
+	SEMICOL					reduce	41
+

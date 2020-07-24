@@ -247,7 +247,8 @@
     (lambda (l idx)
       (cond
         [(expval? l) (set! l (expval-value l))])
-      (if (null? (cdr idx)) (list-ref l (expval-value (car idx))) (reference-helper (list-ref l (expval-value (car idx))) (cdr idx)))));(list-ref (reverse (cdr (reverse idx))) (car (reverse idx))))))) ; check this line
+      (if (null? (cdr idx)) (if (= (expval-value (car idx)) -1)  (bool->expval (list? l ))
+                                (list-ref l (expval-value (car idx)))) (reference-helper (list-ref l (expval-value (car idx))) (cdr idx)))));(list-ref (reverse (cdr (reverse idx))) (car (reverse idx))))))) ; check this line
 ;-------------------------------------------------------
 
 (define value-of-return-expr
@@ -410,7 +411,10 @@
       (let ((parser-res (our-parser my-lexer))) (value-of-command parser-res env))
       )))
 
-(evaluate "inp.txt")
+(evaluate "lib.txt")
+;(evaluate "inptest.txt")
+;(set! RETURN? #f)
+;(evaluate "inp.txt")
 ;(display "\n")
 ;(display env)
 ;(display "\n")
