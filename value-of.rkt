@@ -360,10 +360,16 @@
       (begin
         (define orig-env env)
         (define saved-env-copy saved-env)
-        (set! saved-env-copy (list `extend-env name rator saved-env))
-        (let ([res (value-of-command body (extend-env-args vars args saved-env-copy orig-env))])
-          (reset-env-and-return-val orig-env res))))
-      ))
+        (if (equal? name 'eval)
+          (begin
+            (set-env empty-env)
+            (let
+              ([res (evaluate_string (expval-value (value-of-expression (args-exp1 args) env)))])
+              (begin (set-env orig-env) res)))
+          ((set! saved-env-copy (list `extend-env name rator saved-env))
+            (let ([res (value-of-command body (extend-env-args vars args saved-env-copy orig-env))])
+              (reset-env-and-return-val orig-env res))))
+            ))))
 
 (define value-of-func-expr
   (lambda (f env) (let (
@@ -408,6 +414,14 @@
     (begin
       (define lex-this (lambda (lexer input) (lambda () (lexer input))))
       (define my-lexer (lex-this our-lexer (open-input-file file_path)))
+      (let ((parser-res (our-parser my-lexer))) (value-of-command parser-res env))
+      )))
+
+(define evaluate_string
+  (lambda (str)
+    (begin
+      (define lex-this (lambda (lexer input) (lambda () (lexer input))))
+      (define my-lexer (lex-this our-lexer (open-input-string str)))
       (let ((parser-res (our-parser my-lexer))) (value-of-command parser-res env))
       )))
 
