@@ -366,7 +366,7 @@
             (let
               ([res (evaluate_string (expval-value (value-of-expression (args-exp1 args) env)))])
               (begin (set-env orig-env) res)))
-          ((set! saved-env-copy (list `extend-env name rator saved-env))
+          (begin (set! saved-env-copy (list `extend-env name rator saved-env))
             (let ([res (value-of-command body (extend-env-args vars args saved-env-copy orig-env))])
               (reset-env-and-return-val orig-env res))))
             ))))
