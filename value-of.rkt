@@ -96,7 +96,7 @@
   (lambda (whileexpr x)
     (cond
       [(while-expr? whileexpr)  (let ([condition (expval-value (value-of-expression (while-expr-exp whileexpr) env))])
-                                        (if (if (number? condition) (not (old= 0 condition)) condition)
+                                        (if (and (not RETURN?) (if (number? condition) (not (old= 0 condition)) condition))
                                             (begin (value-of-command (while-expr-com whileexpr) env)
                                             (value-of-while-expr whileexpr env))
                                             `()))
