@@ -73,7 +73,7 @@
 
 (define value-of-command
   (lambda (com x)
-    ;(display env)
+    ;(display MAIN-TOPIC)
     ;(display "###\n")
     (cond
       [RETURN? RETVAL]
@@ -88,7 +88,7 @@
     [(whilecom-expr? ucom) (value-of-while-expr (whilecom-expr-whileexpr ucom) env)]
     [(ifcom-expr? ucom) (value-of-if-expr (ifcom-expr-ifexpr ucom) env)]
     [(assigncom-expr? ucom) (value-of-assign (assigncom-expr-assignexpr ucom) env)]
-    [(returncom-expr? ucom) (begin (define a (value-of-return-expr (returncom-expr-returnexpr ucom) env)) (set! RETURN? #t) (set! RETURN-VAL (- RETURN-VAL 1)) (if (old< RETURN-VAL 0)
+    [(returncom-expr? ucom) (begin (define a (value-of-return-expr (returncom-expr-returnexpr ucom) env)) (set! RETURN? #t) (set! RETURN-VAL (- RETURN-VAL 1)) (if (and MAIN-TOPIC (old< RETURN-VAL 0))
                                                                                                                                                  (set! RETVAL (make-return-value a))
                                                                                                                                                  (set! RETVAL a)) RETVAL)])))
 
@@ -362,7 +362,7 @@
         (define saved-env-copy saved-env)
         (if (equal? name 'eval)
           (begin
-            (set-env empty-env)
+            (set-env saved-env)
             (let
               ([res (evaluate_string (expval-value (value-of-expression (args-exp1 args) env)))])
               (begin (set-env orig-env) res)))
@@ -408,10 +408,15 @@
 (define RETURN? #f)
 (define RETURN-VAL 0)
 (define RETVAL '())
+(define MAIN-TOPIC #t)
 
 (define evaluate
   (lambda (file_path)
     (begin
+      (set! MAIN-TOPIC #t)
+      (set! RETURN? #f)
+      (set! RETURN-VAL 0)
+      (set! RETVAL '())
       (define lex-this (lambda (lexer input) (lambda () (lexer input))))
       (define my-lexer (lex-this our-lexer (open-input-file file_path)))
       (let ((parser-res (our-parser my-lexer))) (value-of-command parser-res env))
@@ -420,13 +425,26 @@
 (define evaluate_string
   (lambda (str)
     (begin
+      (define RETURN?-C RETURN?)
+      (define RETURN-VAL-C RETURN-VAL)
+      (define RETVAL-C RETVAL)
+      (define MAIN-TOPIC-C MAIN-TOPIC)
+      (set! RETURN? #f)
+      (set! RETURN-VAL 0)
+      (set! RETVAL '())
+      (set! MAIN-TOPIC #f)
       (define lex-this (lambda (lexer input) (lambda () (lexer input))))
       (define my-lexer (lex-this our-lexer (open-input-string str)))
-      (let ((parser-res (our-parser my-lexer))) (value-of-command parser-res env))
+      (let ((parser-res (our-parser my-lexer)))
+        (define R (value-of-command parser-res env))
+        (set! RETURN? RETURN?-C)
+        (set! RETURN-VAL (- RETURN-VAL-C 1))
+        (set! RETVAL RETVAL-C)
+        (set! MAIN-TOPIC MAIN-TOPIC-C)
+        R)
       )))
 
 (evaluate "lib.txt")
-(set! RETURN? #f)
 (evaluate "inp.txt")
 ;(display "\n")
 ;(display env)

@@ -127,4 +127,6 @@ r=mergesort([111,6,3,-1]);
 
 eval=func(str) {
   return str
-}
+};
+
+return "loading lib.txt"
