@@ -129,6 +129,4 @@ eval=func(str) {
   return str
 };
 
-
-return "loading lib..."
-
+return "loading lib.txt"
